@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Orbis: switch to PC
+Comment=NickLabs PS4 Orbis Linux — change personality (PC)
+Exec=/usr/lib/orbis/orbis-switch-gui pc
+Icon=preferences-system
+Terminal=false
+Categories=System;Settings;

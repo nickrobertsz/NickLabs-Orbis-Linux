@@ -1,0 +1,32 @@
+# NickLabs Orbis — PS4 kernel (Aeolia/Belize target). Uses kernel/build-kernel.sh so the
+# package and a manual build produce the same artifact. The pacman hook
+# 95-orbis-kernel-sync stages it on the PS4 boot partition after a loader check.
+pkgname=linux-orbis-ps4
+_target=aeolia-belize-6.15
+pkgver=6.15.4.crashnt4.7
+pkgrel=1
+pkgdesc="PS4 (Aeolia/Belize) Linux kernel for NickLabs Orbis: feeRnt crashnt-4.7 + Orbis patches, firmware-free"
+arch=('x86_64')
+url="https://github.com/feeRnt/ps4-linux-12xx"
+license=('GPL-2.0-only')
+makedepends=('git' 'clang' 'lld' 'llvm' 'bc' 'flex' 'bison' 'libelf' 'perl' 'python' 'pahole' 'cpio')
+options=('!strip' '!debug' '!lto')
+source=()
+
+build() {
+  "${startdir}/../../../kernel/build-kernel.sh" "$_target" --out "$srcdir/out" --src "$srcdir/src"
+}
+
+package() {
+  local rel
+  rel="$(python -c "import json; print(json.load(open('$srcdir/out/build-manifest.json'))['kernel_release'])")"
+  install -d "$pkgdir/usr/lib/modules"
+  tar -C "$pkgdir" -xf "$srcdir/out/modules-$rel.tar" --strip-components=1 ./lib 2>/dev/null \
+    || tar -C "$pkgdir/usr" -xf "$srcdir/out/modules-$rel.tar" ./lib
+  if [ -d "$pkgdir/lib/modules" ]; then mv "$pkgdir/lib/modules/$rel" "$pkgdir/usr/lib/modules/"; rm -rf "$pkgdir/lib"; fi
+  rm -f "$pkgdir/usr/lib/modules/$rel"/{build,source}
+  install -Dm644 "$srcdir/out/bzImage" "$pkgdir/usr/lib/modules/$rel/vmlinuz"
+  install -Dm644 "$srcdir/out/config" "$pkgdir/usr/lib/modules/$rel/config"
+  install -Dm644 "$srcdir/out/build-manifest.json" "$pkgdir/usr/lib/modules/$rel/orbis-build-manifest.json"
+  echo "$pkgname" > "$pkgdir/usr/lib/modules/$rel/pkgbase"
+}

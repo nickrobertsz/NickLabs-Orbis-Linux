@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "id": "aeolia-belize-6.15",
+  "status": "PRIMARY v1 TARGET — compile-tested only, not boot-tested by Orbis",
+  "applies_to_groups": ["fat-aeolia", "fat-belize", "slim-belize", "pro-belize"],
+  "source": {
+    "repository": "https://github.com/feeRnt/ps4-linux-12xx",
+    "tag": "v6.15.4_crashnt-4.7__no-built-in-fw",
+    "tag_object": "8fb8c9d064c9028fb2cfeb4400cc733067f50654",
+    "commit": "108ef9764583076cbff879f581fd598817eb880a",
+    "license": "GPL-2.0",
+    "why": "Same crashnt-4.7 tree whose prebuilt 6.15.4 kernel an independent tester confirmed fixes the HDMI modeset black screen on a CUH-12xx (aday1/ps4-hdmi-blackscreen@58ce86b). The ps4_bridge ICC in-queue delays are already removed and 1080p60 is PREFERRED in this tree."
+  },
+  "base_config": "config (repository root, CONFIG_LOCALVERSION=-crashnt-4.7_no-built-in-fw)",
+  "config_fragments": ["config/orbis-common.fragment", "config/orbis-aeolia-belize.fragment"],
+  "patch_series": "patches/aeolia-belize-6.15/series",
+  "toolchain": {"cc": "clang", "llvm": true, "kcflags": "-march=btver2 -mtune=btver2 -O2",
+                "note": "Upstream README builds with clang/LLVM and -march=btver2 for the kernel; btver2 is exactly Jaguar."},
+  "expected_boot_protocol": "2.15",
+  "firmware": "none embedded (CONFIG_EXTRA_FIRMWARE=\"\"); see manifests/firmware.json",
+  "upstream_prebuilt_reference": {
+    "asset": "https://github.com/feeRnt/ps4-linux-12xx/releases/download/v6.15.4__crashnt-4.7/bzImage_GCC-11",
+    "sha256": "d8ade1fb9bace4e6bbd9119ab72f7f0afc99a09c7004add945b93f59f2c47e37",
+    "orbis_check": "protocol 2.15, XLF 0x0023, CONFIG_X86_PS4=y, embeds Marvell+MediaTek firmware (license concern) — reference only, not shipped"
+  }
+}

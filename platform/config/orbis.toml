@@ -1,0 +1,58 @@
+# NickLabs PS4 Orbis Linux — packaged defaults (/usr/share/orbis/orbis.toml).
+# Override any key in /etc/orbis/orbis.toml; the dashboard writes /var/lib/orbis/settings.json.
+
+[orbis]
+default_mode = "pc"
+# auto: fast switch when nothing requires a reboot; reboot when VRAM or GPU health demands it.
+# fast: never reboot (refuses when a reboot is required unless --force).
+# reboot: always stage the next boot and reboot through the PS4 system software.
+switch_policy = "auto"
+# A fast switch is still taken when a reboot would only *return* memory; above this
+# saving Orbis recommends (does not force) a restart and stages vram.txt for next boot.
+reboot_saving_threshold_mb = 512
+stop_timeout_s = 30
+
+[hardware]
+# Operator-declared model, e.g. "CUH-1215A". Belize appears in fat and slim consoles,
+# so the qualification group cannot be derived from silicon alone.
+# model = "CUH-1215A"
+
+[boot]
+# FAT partition the PS4 payload loads bzImage/initramfs.cpio.gz/bootargs.txt/vram.txt from.
+fat_label = "ORBIS-BOOT"
+mountpoint = "/boot/ps4"
+# Presets offered by Orbis. The loader accepts 32..4609 MB but its MTRR setup assumes a
+# power of two; 32/64 MB caused display problems for some users (community guide).
+allowed_vram_mb = [128, 256, 512, 1024, 2048]
+
+[web]
+listen = "0.0.0.0"
+port = 8420
+idle_exit_s = 600
+allow_networks = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+                  "169.254.0.0/16", "::1/128", "fc00::/7", "fe80::/10"]
+
+[ai]
+backend = "cpu"          # cpu | vulkan | auto  (vulkan needs a passing harness gate receipt)
+listen = "127.0.0.1"     # llama-server never listens on the LAN; orbis-web proxies /v1 when lan_api = true
+port = 8081
+lan_api = false
+models_dir = "/var/lib/orbis/models"
+ctx_size = 4096
+batch = 512
+ubatch = 256
+cache_type = "f16"
+headroom_mib = 512
+power_preset = "balanced"
+
+[gaming]
+frontend = "steam-gamepadui"   # steam-gamepadui | es-de | kodi | none
+
+[alerts]
+interval_s = 15
+mem_available_warn_mib = 400
+mem_available_crit_mib = 200
+
+[kexec]
+# Linux-to-Linux relaunch is UNVERIFIED on the Orbis kernels and cannot change VRAM.
+enabled = false

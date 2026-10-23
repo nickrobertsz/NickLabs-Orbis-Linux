@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "baikal-7.2",
+  "status": "SECONDARY — delegated to Linux psX build system; not built by Orbis CI yet",
+  "applies_to_groups": ["slim-baikal", "pro-baikal"],
+  "source": {
+    "repository": "https://github.com/meerzulee/linux-psx",
+    "commit": "2138063970722631aa0a7cb7f034ba3e11b82507",
+    "make_target": "7.2-ps4-baikal-native-dev",
+    "license": "GPL-2.0 (kernel patches), project files per repository",
+    "why": "Only actively maintained Baikal kernel with recorded hardware evidence (one Slim B1): 7.2.11 boot, OpenGL 4.6 1080p60, native Ethernet."
+  },
+  "notes": [
+    "linux-psx's own CI build 7.2.11-psx-ps4-baikal-native-dev2 is explicitly 'not boot-tested'.",
+    "Firmware-free by design; MT7668 Wi-Fi/BT firmware is operator-supplied (manifests/firmware.json)."
+  ],
+  "expected_boot_protocol": "2.15 (to be confirmed with `orbis boot check-kernel` on the built bzImage)"
+}

@@ -1,0 +1,61 @@
+From: NickLabs Orbis <orbis@nicklabs.invalid>
+Subject: [PATCH] drm/amdgpu/ps4_bridge: advertise only 1080p60 (CEA VIC 16)
+
+ps4_bridge_get_modes() offers both 1920x1080@60 (VIC 16, preferred) and
+1920x1080@120 (VIC 63). Display managers and compositors have been observed
+to select the 120 Hz mode on 60 Hz panels, leaving the HDMI output black
+(aday1/ps4-hdmi-blackscreen, DionKill/ps4-linux-tutorial issues.md).
+
+Advertise only VIC 16, and return the number of modes added (1) instead of 0
+so probe helpers do not treat the connector as mode-less.
+
+Ported from Linux psX 0011-amdgpu-ps4-bridge-remove-1080p120-mode.patch
+(meerzulee/linux-psx, platforms/ps4/patches/6.18-baikal/0300-gpu-liverpool),
+which does not apply to the 6.15.4 crashnt tree. The mode_1080p120 table
+entry is kept (now unused, __maybe_unused) so mode_valid() is unchanged.
+
+Status: compile-tested only (see docs/RELEASE-STATUS.md). Not boot-tested.
+
+License: GPL-2.0 (kernel)
+---
+diff --git a/drivers/gpu/drm/amd/amdgpu/ps4_bridge.c b/drivers/gpu/drm/amd/amdgpu/ps4_bridge.c
+index 925986f..c133861 100644
+--- a/drivers/gpu/drm/amd/amdgpu/ps4_bridge.c
++++ b/drivers/gpu/drm/amd/amdgpu/ps4_bridge.c
+@@ -718,7 +718,7 @@ static const struct drm_display_mode mode_1080p = {
+  * Try setting a TYPE_PREFFERED mode
+  */
+ /* 63 - 1920x1080@120Hz */
+-static const struct drm_display_mode mode_1080p120 = {
++static const struct drm_display_mode mode_1080p120 __maybe_unused = {
+ 	DRM_MODE("1920x1080", DRM_MODE_TYPE_DRIVER, 297000, 1920, 2008,
+ 			2052, 2200, 0, 1080, 1084, 1089, 1125, 0,
+ 		   DRM_MODE_FLAG_PHSYNC | DRM_MODE_FLAG_PVSYNC),
+@@ -732,10 +732,16 @@ int ps4_bridge_get_modes(struct drm_connector *connector)
+ 	pr_debug("ps4_bridge_get_modes\n");
+ 
+ 	newmode = drm_mode_duplicate(dev, &mode_1080p);
++	if (!newmode)
++		return 0;
+ 	drm_mode_probed_add(connector, newmode);
+ 
+-	newmode = drm_mode_duplicate(dev, &mode_1080p120);
+-	drm_mode_probed_add(connector, newmode);
++	/*
++	 * Orbis: do not advertise CEA VIC 63 (1080p120). Display managers and
++	 * compositors pick it on 60 Hz panels, which blanks the output. The
++	 * mode table entry stays so mode_valid() behaviour is unchanged for
++	 * clients that request it explicitly.
++	 */
+ 
+ 	//newmode = drm_mode_duplicate(dev, &mode_720p);
+ 	//drm_mode_probed_add(connector, newmode);
+@@ -744,7 +750,7 @@ int ps4_bridge_get_modes(struct drm_connector *connector)
+ 
+ 	drm_connector_update_edid_property(connector, NULL);
+ 
+-	return 0;
++	return 1;
+ }
+ 
+ enum drm_connector_status ps4_bridge_detect(struct drm_connector *connector,

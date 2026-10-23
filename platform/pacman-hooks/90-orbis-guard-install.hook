@@ -1,0 +1,38 @@
+# NickLabs Orbis: refuse generic graphics stacks / kernels that would replace the PS4 builds.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = mesa
+Target = lib32-mesa
+Target = mesa-git
+Target = lib32-mesa-git
+Target = mesa-amber
+Target = vulkan-radeon
+Target = lib32-vulkan-radeon
+Target = vulkan-swrast
+Target = lib32-vulkan-swrast
+Target = opencl-mesa
+Target = xf86-video-amdgpu
+Target = xf86-video-amdgpu-git
+Target = mesa-ps4
+Target = lib32-mesa-ps4
+Target = libdrm-ps4
+Target = lib32-libdrm-ps4
+Target = xf86-video-amdgpu-ps4
+Target = amdvlk
+Target = lib32-amdvlk
+Target = linux
+Target = linux-lts
+Target = linux-zen
+Target = linux-hardened
+Target = linux-rt
+Target = linux-cachyos*
+Target = linux-ps4*
+
+[Action]
+Description = Orbis: protecting the PS4 graphics and kernel stack...
+When = PreTransaction
+Exec = /usr/lib/orbis/orbis-pkg-guard install
+NeedsTargets
+AbortOnFail

@@ -1,0 +1,22 @@
+# NickLabs Orbis — pacman configuration.
+# All Arch repositories point at ONE Arch Linux Archive snapshot. `orbis update` moves the
+# snapshot date only after the new date has been qualified (see BUILD-AND-DEPLOY.md).
+# Do NOT add CachyOS v3/v4 or any x86-64-v3 repository: Jaguar cannot execute it.
+[options]
+Architecture = x86_64
+HoldPkg = pacman glibc
+CheckSpace
+ParallelDownloads = 3
+SigLevel = Required DatabaseOptional
+LocalFileSigLevel = Optional
+
+[orbis]
+SigLevel = Required
+Server = https://packages.nicklabs.invalid/orbis/$arch
+
+[core]
+Server = https://archive.archlinux.org/repos/@SNAPSHOT@/$repo/os/$arch
+[extra]
+Server = https://archive.archlinux.org/repos/@SNAPSHOT@/$repo/os/$arch
+[multilib]
+Server = https://archive.archlinux.org/repos/@SNAPSHOT@/$repo/os/$arch

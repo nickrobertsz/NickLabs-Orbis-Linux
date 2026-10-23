@@ -1,0 +1,5 @@
+# Aeolia/Belize specifics (none beyond the base config at this time).
+# Candidates under evaluation, intentionally NOT enabled in v1:
+#   CONFIG_PSI=y          memory-pressure alerts (cost: small per-task overhead; needs measurement)
+#   CONFIG_EROFS_FS=y     needed only by the Fedora bootc/composefs qualification track
+#   CONFIG_CGROUP_BPF=y   needed for systemd IPAddressDeny/DevicePolicy hardening

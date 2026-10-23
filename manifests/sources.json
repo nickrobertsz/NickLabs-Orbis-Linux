@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "generated": "2026-10-23",
+  "policy": "Every external input is pinned by commit, tag object or SHA-256. CI verifies pins; a moved tag fails the build.",
+  "arch_linux": {
+    "archive_snapshot": "2026/10/20",
+    "url": "https://archive.archlinux.org/repos/2026/10/20/",
+    "repos": ["core", "extra", "multilib"],
+    "architecture": "x86_64 (generic; x86-64-v3/v4 repositories are forbidden: Jaguar lacks AVX2/FMA/BMI2)",
+    "status": "candidate snapshot; not yet assembled or hardware-qualified"
+  },
+  "kernel": {
+    "aeolia-belize-6.15": {"repo": "https://github.com/feeRnt/ps4-linux-12xx", "tag": "v6.15.4_crashnt-4.7__no-built-in-fw",
+                           "tag_object": "8fb8c9d064c9028fb2cfeb4400cc733067f50654",
+                           "commit": "108ef9764583076cbff879f581fd598817eb880a", "license": "GPL-2.0"},
+    "baikal-7.2": {"repo": "https://github.com/meerzulee/linux-psx", "commit": "2138063970722631aa0a7cb7f034ba3e11b82507",
+                   "make_target": "7.2-ps4-baikal-native-dev"}
+  },
+  "mesa": {"version": "26.2.5", "archive": "https://archive.mesa3d.org/mesa-26.2.5.tar.xz",
+           "sha256": "794b3d1729075dae7ebd47c7283b7ca0cdb5dec668f7f11cc0a5d82f6138a0a5",
+           "commit": "ddaf85e353442d9d7f192fdcf1823e652e3f2ee3",
+           "patches": "graphics/patches/mesa/provenance.json"},
+  "xf86-video-amdgpu": {"repo": "https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu", "tag": "xf86-video-amdgpu-25.0.0",
+                        "patches": "graphics/patches/xf86-video-amdgpu/provenance.json"},
+  "llama.cpp": {"repo": "https://github.com/ggml-org/llama.cpp", "tag": "b11845",
+                "commit": "9ff0d7e90f0faaa7c16017e6dcf9cf91c50a100e", "license": "MIT"},
+  "initramfs": {"repo": "https://github.com/GayCorp/initramfs-ps4", "commit": "c21a72044adf6c13b773c40f16bae2a9cb83523e",
+                "license": "GPL-3.0 (init/functions from better-initramfs: BSD-3-Clause)",
+                "note": "built by packaging/initramfs/build_initramfs.py; firmware operator-supplied (manifests/firmware.json)"},
+  "loader": {"repo": "https://github.com/ps4-linux/ps4-linux-loader", "commit": "d0f4d4c0bbc9e8b4870300781b352605ed2bc91d",
+             "use": "not built or shipped by Orbis; its file contract (bzImage, initramfs.cpio.gz, bootargs.txt, vram.txt) is what platform/orbis/bootfs.py implements"},
+  "references_inspected": {
+    "DionKill/ps4-linux-tutorial": "82b524952f3db4c216b8f2b5f1dc690e074dae8f",
+    "DionKill/ps4-video-archlinux": "57e0f8ecc7a1df9b9664d682b19fadfe3e336f02",
+    "meerzulee/linux-psx": "2138063970722631aa0a7cb7f034ba3e11b82507",
+    "meerzulee/omarchy-psx": "625cb1ba7c662960ea5ff26a9a90c34a825e5827",
+    "aday1/ps4-hdmi-blackscreen": "5c1c2fc1416d1aa99da408315c37f45d2ed1d7e9",
+    "chaotic-cx/mesa-mirror (tag mesa-26.2.5)": "ddaf85e353442d9d7f192fdcf1823e652e3f2ee3"
+  },
+  "host_validation_tools_not_shipped": {
+    "google/shaderc": "73743588fe9c39f2f1c780a087d94afac691a189",
+    "google/swiftshader": "cddb5c91b23ff70a1f607ea31610aa0d7f4b5ad5",
+    "KhronosGroup/Vulkan-Headers": "9a0f3099c8a9607a7c0f3127d8abfdc19a93e8c5",
+    "facebook/zstd v1.5.7": "f8745da6ff1ad1e7bab384bd1f9d742439278e99"
+  }
+}

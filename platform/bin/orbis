@@ -1,0 +1,4 @@
+#!/usr/bin/python3 -I
+import sys
+from orbis.cli import main
+sys.exit(main())

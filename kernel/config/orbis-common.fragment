@@ -1,0 +1,21 @@
+# NickLabs Orbis — kernel config fragment applied on top of every target's base config.
+# Firmware is never embedded: redistribution licences of the PS4 Wi-Fi blobs are unknown.
+CONFIG_EXTRA_FIRMWARE=""
+CONFIG_LOCALVERSION="-orbis-ps4"
+# Expose the running config to `orbis doctor` and the bzImage checker.
+CONFIG_IKCONFIG=y
+CONFIG_IKCONFIG_PROC=y
+# Mode engine needs memory accounting per slice.
+CONFIG_MEMCG=y
+CONFIG_CGROUPS=y
+# Suspend/hibernate are not qualified on PS4: keep them out of the kernel.
+# CONFIG_SUSPEND is not set
+# CONFIG_HIBERNATION is not set
+# zram swap instead of swapping to a USB SSD.
+CONFIG_ZRAM=y
+# Root filesystems Orbis supports.
+CONFIG_EXT4_FS=y
+CONFIG_BTRFS_FS=y
+CONFIG_VFAT_FS=y
+CONFIG_USB_UAS=y
+CONFIG_USB_STORAGE=y

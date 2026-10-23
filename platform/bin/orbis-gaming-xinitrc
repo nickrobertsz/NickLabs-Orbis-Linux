@@ -1,0 +1,15 @@
+#!/bin/sh
+# Started by xinit for the GAMING personality.
+xset -dpms s off 2>/dev/null || true
+# A tiny WM keeps fullscreen/focus sane for launchers that expect one.
+if command -v openbox >/dev/null 2>&1; then openbox & fi
+case "${ORBIS_GAMING_FRONTEND:-steam-gamepadui}" in
+    steam-gamepadui)
+        if command -v steam >/dev/null 2>&1; then exec steam -gamepadui; fi ;;
+    es-de)
+        if command -v es-de >/dev/null 2>&1; then exec es-de --fullscreen; fi ;;
+    kodi)
+        if command -v kodi >/dev/null 2>&1; then exec kodi --standalone; fi ;;
+esac
+# Fallback: say what is missing instead of a black screen.
+exec xterm -fullscreen -fa Monospace -fs 14 -e sh -c 'echo "Orbis GAMING: frontend ${ORBIS_GAMING_FRONTEND} is not installed."; echo "Install it or run: orbis mode pc"; exec sh'

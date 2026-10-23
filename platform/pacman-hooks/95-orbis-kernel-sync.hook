@@ -1,0 +1,13 @@
+# NickLabs Orbis: after a kernel package changes, check it against the PS4 loader
+# contract and stage it on the boot partition, keeping the previous pair as *.orbis-prev.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/lib/modules/*-orbis-ps4*/vmlinuz
+
+[Action]
+Description = Orbis: checking and staging the PS4 kernel on the boot partition...
+When = PostTransaction
+Exec = /usr/lib/orbis/orbis-kernel-sync
+NeedsTargets

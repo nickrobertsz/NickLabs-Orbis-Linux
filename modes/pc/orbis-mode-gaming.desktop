@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Orbis: switch to GAMING
+Comment=NickLabs PS4 Orbis Linux — change personality (GAMING)
+Exec=/usr/lib/orbis/orbis-switch-gui gaming
+Icon=preferences-system
+Terminal=false
+Categories=System;Settings;

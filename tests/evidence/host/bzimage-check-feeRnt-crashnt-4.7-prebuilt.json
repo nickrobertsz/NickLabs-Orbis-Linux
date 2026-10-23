@@ -1,0 +1,25 @@
+{
+  "path": "/home/claude/research/dl/bzImage_crashnt47_gcc11",
+  "size": 17400832,
+  "valid_header": true,
+  "protocol": "2.15",
+  "kernel_version": "6.15.4-crashnt-4.7 (root@954c431d15a0) #1 SMP PREEMPT_DYNAMIC Fri Mar 13 17:53:06 UTC 2026",
+  "setup_sects": 31,
+  "loadflags": 1,
+  "xloadflags": 35,
+  "cmdline_size": 2047,
+  "relocatable": true,
+  "init_size": 63840256,
+  "payload_compression": "xz",
+  "ikconfig": {
+    "CONFIG_CC_VERSION_TEXT": "\"gcc-11 (Ubuntu 11.5.0-1ubuntu1~24.04.1) 11.5.0\"",
+    "CONFIG_LOCALVERSION": "\"-crashnt-4.7\"",
+    "CONFIG_X86_PS4": "y",
+    "CONFIG_EXTRA_FIRMWARE": "\"mrvl/sd8897_uapsta.bin mrvl/sd8797_uapsta.bin mediatek/mt7668pr2h.bin EEPROM_MT7668.bin EEPROM_MT7668_e1.bin mt7668_patch_e1_hdr.bin mt7668_patch_e2_hdr.bin TxPwrLimit_MT76x8.dat wifi.cfg WIFI_RAM_CODE2_SDIO_MT7668.bin WIFI_RAM_CODE2_USB_MT7668.bin WIFI_RAM_CODE_MT7668.bin\""
+  },
+  "errors": [],
+  "warnings": [
+    "kernel embeds firmware \"mrvl/sd8897_uapsta.bin mrvl/sd8797_uapsta.bin mediatek/mt7668pr2h.bin EEPROM_MT7668.bin EEPROM_MT7668_e1.bin mt7668_patch_e1_hdr.bin mt7668_patch_e2_hdr.bin TxPwrLimit_MT76x8.dat wifi.cfg WIFI_RAM_CODE2_SDIO_MT7668.bin WIFI_RAM_CODE2_USB_MT7668.bin WIFI_RAM_CODE_MT7668.bin\"; check redistribution licenses before publishing this binary"
+  ],
+  "ok": true
+}

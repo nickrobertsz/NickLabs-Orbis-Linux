@@ -1,0 +1,64 @@
+{
+  "pins": {
+    "candidate_env": {
+      "ORBIS_FAKE_REAL_BIN": "/home/claude/tools/llama-cpu/bin",
+      "ORBIS_FAKE_WRONG_MODEL": "/home/claude/models/orbis-tiny-f32-wrongseed.gguf"
+    },
+    "harness_version": "0.1.0",
+    "kernel_cmdline": "mitigations=auto,no_guest_host,no_guest_guest deferred_init=lazy dhash_entries=131072 ihash_entries=65536 console=ttyS0 reboot=k panic=1 nomodule random.trust_cpu=1 ipv6.disable=1 swiotlb=noforce psi=1 rdinit=/process_api -- --firecracker-init --addr 0.0.0.0:2024 --max-ws-buffer-size 32768 --block-local-connections --control-vsock-port 5001 --listen-vsock-port 2024 --log-vsock-port 5002",
+    "kernel_release": "6.18.44-fc-v153",
+    "llama_build": "b11845 9ff0d7e90f0faaa7c16017e6dcf9cf91c50a100e",
+    "llama_cpu_bin_dir": "/home/claude/tools/llama-cpu/bin",
+    "llama_vk_bin_dir": "/home/claude/orbis/nicklabs-ps4-orbis-linux/tests/fixtures/fake-llama-gpu",
+    "mesa_version": null,
+    "model": "/home/claude/models/orbis-tiny-f32.gguf",
+    "model_sha256": "57ace22ad2b8e6a7a4bd27940e82846898177c5a6ca0e8797737352558dcab06",
+    "vulkan_devices": []
+  },
+  "steps": 3,
+  "by_outcome": {
+    "PASS": [
+      "preflight",
+      "kld_c128_ub128_nglall"
+    ],
+    "HANG_OR_RESET_INFERRED": [
+      "kld_c2048_ub128_nglall"
+    ]
+  },
+  "boundaries": [
+    {
+      "first_fail_ctx": null,
+      "first_fail_outcome": null,
+      "last_pass_ctx": 128,
+      "ngl": "all",
+      "ubatch": 128
+    }
+  ],
+  "kld_table": [
+    {
+      "step": "kld_c2048_ub128_nglall",
+      "ctx": 2048,
+      "ngl": "all",
+      "ubatch": 128,
+      "outcome": "HANG_OR_RESET_INFERRED",
+      "mean_kld": null,
+      "kld_p99": null,
+      "same_top_p": null,
+      "elapsed_s": null
+    },
+    {
+      "step": "kld_c128_ub128_nglall",
+      "ctx": 128,
+      "ngl": "all",
+      "ubatch": 128,
+      "outcome": "PASS",
+      "mean_kld": 1e-06,
+      "kld_p99": 3.6e-05,
+      "same_top_p": 100.0,
+      "elapsed_s": 0.064
+    }
+  ],
+  "tensors": [],
+  "shader_scan": null,
+  "server": null
+}

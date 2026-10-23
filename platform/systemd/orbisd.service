@@ -1,0 +1,25 @@
+[Unit]
+Description=NickLabs Orbis control service (mode engine, diagnostics; local socket only)
+Documentation=file:///usr/share/doc/orbis/ORBIS-ARCHITECTURE.md
+After=local-fs.target systemd-udevd.service
+DefaultDependencies=yes
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/orbis/orbisd
+Restart=on-failure
+RestartSec=2
+RuntimeDirectory=orbis
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=yes
+StateDirectory=orbis
+LogsDirectory=orbis
+Nice=5
+MemoryMax=128M
+# Root is required for: systemctl isolate, loginctl, /dev/kmsg, mounting the PS4 boot
+# partition, writing sysctls. It listens only on /run/orbis/orbisd.sock.
+ProtectHome=read-only
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

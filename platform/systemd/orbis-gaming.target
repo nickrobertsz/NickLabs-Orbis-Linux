@@ -1,0 +1,8 @@
+[Unit]
+Description=NickLabs Orbis — GAMING personality (controller-first session)
+Documentation=file:///usr/share/doc/orbis/ORBIS-ARCHITECTURE.md
+Requires=multi-user.target
+Wants=orbis-gaming-session.service
+After=multi-user.target
+Conflicts=orbis-pc.target orbis-ai.target display-manager.service orbis-llama.service
+AllowIsolate=yes

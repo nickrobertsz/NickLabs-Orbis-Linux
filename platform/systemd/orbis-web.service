@@ -1,0 +1,25 @@
+[Unit]
+Description=NickLabs Orbis LAN dashboard (unprivileged)
+Requires=orbis-web.socket
+After=orbisd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/orbis/orbis-web
+User=orbis-web
+Group=orbis-web
+SupplementaryGroups=orbis orbis-admin
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryMax=96M
+# Note: IPAddressAllow/Deny and DevicePolicy need CONFIG_CGROUP_BPF, which the PS4
+# kernels inspected do not enable; source-address filtering is done in orbis-web.

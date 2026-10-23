@@ -1,0 +1,31 @@
+#!/bin/sh
+# NickLabs Orbis — systemd generator selecting the boot personality.
+# Installed to /usr/lib/systemd/system-generators/. Runs very early: POSIX sh only.
+# Precedence: systemd.unit= (operator override, untouched) > orbis.mode= on the kernel
+# command line (bootargs.txt, editable from any PC) > /var/lib/orbis/desired-mode
+# (written by `orbis mode`) > /etc/orbis/default-mode > pc.
+early="${2:-/run/systemd/generator.early}"
+R="${ORBIS_GENERATOR_ROOT:-}"   # test hook; empty on real systems
+mode=""
+read -r cmdline < "$R/proc/cmdline" 2>/dev/null || cmdline=""
+for tok in $cmdline; do
+    case "$tok" in
+        systemd.unit=*) exit 0 ;;
+        orbis.mode=*) mode="${tok#orbis.mode=}" ;;
+    esac
+done
+if [ -z "$mode" ] && [ -r "$R/var/lib/orbis/desired-mode" ]; then
+    read -r mode < "$R/var/lib/orbis/desired-mode"
+fi
+if [ -z "$mode" ] && [ -r "$R/etc/orbis/default-mode" ]; then
+    read -r mode < "$R/etc/orbis/default-mode"
+fi
+case "$mode" in
+    pc|gaming|ai) ;;
+    *) mode=pc ;;
+esac
+unit=/usr/lib/systemd/system/orbis-$mode.target
+[ -e "$R$unit" ] || exit 0
+mkdir -p "$early"
+ln -sf "$unit" "$early/default.target"
+exit 0

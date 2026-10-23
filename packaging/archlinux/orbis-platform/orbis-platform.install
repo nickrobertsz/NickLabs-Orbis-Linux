@@ -1,0 +1,35 @@
+post_install() {
+  systemd-sysusers orbis.conf >/dev/null 2>&1 || true
+  systemd-tmpfiles --create orbis.conf >/dev/null 2>&1 || true
+  if [ ! -s /etc/orbis/web-token ]; then
+    umask 027
+    head -c 24 /dev/urandom | base64 | tr -d '/+=' > /etc/orbis/web-token
+    chgrp orbis-web /etc/orbis/web-token 2>/dev/null || true
+    echo ":: Orbis dashboard token: sudo cat /etc/orbis/web-token"
+  fi
+  if [ ! -s /etc/orbis/ai-api-key ]; then
+    umask 027
+    head -c 24 /dev/urandom | base64 | tr -d '/+=' > /etc/orbis/ai-api-key
+    chgrp orbis-web /etc/orbis/ai-api-key 2>/dev/null || true
+  fi
+  systemctl daemon-reload >/dev/null 2>&1 || true
+  systemctl enable orbisd.service orbis-web.socket >/dev/null 2>&1 || true
+  # Sleep states are not qualified on PS4.
+  systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target \
+                 suspend-then-hibernate.target >/dev/null 2>&1 || true
+  echo ":: Orbis installed. Add your user to orbis-admin: sudo gpasswd -a <user> orbis-admin"
+}
+post_upgrade() {
+  systemd-sysusers orbis.conf >/dev/null 2>&1 || true
+  systemctl daemon-reload >/dev/null 2>&1 || true
+  # Never re-enable dormant personality services on upgrade (they are pulled in only by targets).
+  systemctl try-restart orbisd.service >/dev/null 2>&1 || true
+}
+pre_remove() {
+  systemctl disable --now orbis-web.socket orbisd.service >/dev/null 2>&1 || true
+}
+post_remove() {
+  systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.target \
+                   suspend-then-hibernate.target >/dev/null 2>&1 || true
+  systemctl daemon-reload >/dev/null 2>&1 || true
+}

@@ -1,0 +1,17 @@
+# NickLabs Orbis: refuse removing PS4-specific Orbis packages by accident.
+[Trigger]
+Operation = Remove
+Type = Package
+Target = mesa-orbis-ps4
+Target = lib32-mesa-orbis-ps4
+Target = xf86-video-amdgpu-orbis-ps4
+Target = linux-orbis-ps4*
+Target = orbis-platform
+Target = orbis-initramfs
+
+[Action]
+Description = Orbis: protecting PS4-specific packages...
+When = PreTransaction
+Exec = /usr/lib/orbis/orbis-pkg-guard remove
+NeedsTargets
+AbortOnFail

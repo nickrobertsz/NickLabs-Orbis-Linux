@@ -1,0 +1,11 @@
+#!/bin/sh
+# Desktop shortcut helper: confirm, then switch personality via orbisd.
+mode="${1:?usage: orbis-switch-gui pc|gaming|ai}"
+plan="$(orbis plan "$mode" 2>&1)"
+if command -v zenity >/dev/null 2>&1; then
+    zenity --question --title="NickLabs Orbis — switch to ${mode}" --width=520 \
+        --text="$(printf '%s\n\nProceed?' "$plan" | sed 's/&/\&amp;/g;s/</\&lt;/g')" || exit 0
+    orbis mode "$mode" --yes 2>&1 | zenity --text-info --title="NickLabs Orbis" --width=640 --height=360 --auto-scroll
+else
+    exec xterm -e sh -c "orbis mode $mode; echo; read -p 'Press Enter to close' x"
+fi

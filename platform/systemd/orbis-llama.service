@@ -1,0 +1,34 @@
+[Unit]
+Description=NickLabs Orbis AI — llama.cpp inference server
+Documentation=file:///usr/share/doc/orbis/MODE-RESOURCE-BUDGET.md
+After=network-online.target orbisd.service
+Wants=network-online.target
+PartOf=orbis-ai.target
+
+[Service]
+Type=exec
+User=orbis-ai
+Group=orbis-ai
+SupplementaryGroups=render video
+ExecStart=/usr/lib/orbis/orbis-ai-launch
+Slice=orbis-ai.slice
+RuntimeDirectory=orbis-ai
+Restart=on-failure
+RestartSec=5
+# 78 = EX_CONFIG (no model configured / unreadable model): do not restart-loop.
+RestartPreventExitStatus=78
+TimeoutStopSec=30
+# Prefer killing the model over system services under memory exhaustion.
+OOMScoreAdjust=500
+OOMPolicy=stop
+Nice=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadOnlyPaths=/var/lib/orbis/models
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes

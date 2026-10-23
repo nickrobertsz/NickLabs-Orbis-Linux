@@ -1,0 +1,127 @@
+{
+  "files": [
+    {
+      "path": "/home/claude/tools/llama-cpu/bin/libggml-cpu.so",
+      "elf_note": {},
+      "disasm": {
+        "functions": 1208,
+        "stripped": false,
+        "instructions_total": 232928,
+        "instructions": {},
+        "bmi2_density": 0.0,
+        "functions_with": {},
+        "functions_with_any": 0,
+        "threshold": 12,
+        "verdict": "baseline-safe",
+        "examples": {}
+      },
+      "verdict": "safe"
+    },
+    {
+      "path": "/home/claude/tools/llama-vk/bin/libggml-vulkan.so",
+      "elf_note": {},
+      "disasm": {
+        "functions": 1153,
+        "stripped": false,
+        "instructions_total": 291185,
+        "instructions": {},
+        "bmi2_density": 0.0,
+        "functions_with": {},
+        "functions_with_any": 0,
+        "threshold": 11,
+        "verdict": "baseline-safe",
+        "examples": {}
+      },
+      "verdict": "safe"
+    },
+    {
+      "path": "/home/claude/tools/llama-cpu/bin/llama-server",
+      "elf_note": {},
+      "disasm": {
+        "functions": 32,
+        "stripped": false,
+        "instructions_total": 664,
+        "instructions": {},
+        "bmi2_density": 0.0,
+        "functions_with": {},
+        "functions_with_any": 0,
+        "threshold": 8,
+        "verdict": "baseline-safe",
+        "examples": {}
+      },
+      "verdict": "safe"
+    },
+    {
+      "path": "/home/claude/research/pkgx/mesa/usr/lib/libvulkan_radeon.so",
+      "elf_note": {},
+      "disasm": {
+        "functions": 6,
+        "stripped": true,
+        "instructions_total": 1561606,
+        "instructions": {
+          "avx2": 3146,
+          "avx512": 1990
+        },
+        "bmi2_density": 0.0,
+        "functions_with": {
+          "avx2": 1,
+          "avx512": 1
+        },
+        "functions_with_any": 1,
+        "threshold": 8,
+        "verdict": "dispatched",
+        "examples": {
+          "avx2": "vpbroadcastd %xmm0,%ymm0 in <vk_icdGetPhysicalDeviceProcAddr@@Base>",
+          "avx512": "kmovw %r9d,%k1 in <vk_icdGetPhysicalDeviceProcAddr@@Base>"
+        }
+      },
+      "verdict": "safe-if-dispatched"
+    },
+    {
+      "path": "/tmp/claude-0/isa/t_v3",
+      "elf_note": {},
+      "disasm": {
+        "functions": 15,
+        "stripped": false,
+        "instructions_total": 385,
+        "instructions": {
+          "avx2": 10,
+          "bmi2": 6,
+          "fma": 3
+        },
+        "bmi2_density": 0.015584,
+        "functions_with": {
+          "avx2": 2,
+          "bmi2": 1,
+          "fma": 1
+        },
+        "functions_with_any": 3,
+        "threshold": 8,
+        "verdict": "compiled-for-v3",
+        "examples": {
+          "avx2": "vpsrld %xmm5,%ymm2,%ymm2 in <main>",
+          "bmi2": "shlx %ecx,%r9d,%r10d in <f>",
+          "fma": "vfmadd231ss (%rcx,%r8,4),%xmm6,%xmm0 in <g>"
+        }
+      },
+      "verdict": "unsafe"
+    },
+    {
+      "path": "/tmp/claude-0/isa/t_btver2",
+      "elf_note": {},
+      "disasm": {
+        "functions": 15,
+        "stripped": false,
+        "instructions_total": 587,
+        "instructions": {},
+        "bmi2_density": 0.0,
+        "functions_with": {},
+        "functions_with_any": 0,
+        "threshold": 8,
+        "verdict": "baseline-safe",
+        "examples": {}
+      },
+      "verdict": "safe"
+    }
+  ]
+}

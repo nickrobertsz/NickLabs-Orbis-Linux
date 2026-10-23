@@ -1,0 +1,36 @@
+# NickLabs Orbis — X.org amdgpu DDX with the PS4 (CIK/Liverpool) cursor-size fix.
+pkgname=xf86-video-amdgpu-orbis-ps4
+_tag=xf86-video-amdgpu-25.0.0
+pkgver=25.0.0
+pkgrel=1
+pkgdesc="X.org amdgpu video driver with NickLabs Orbis PS4 cursor fix"
+arch=('x86_64')
+url="https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu"
+license=('MIT')
+depends=('systemd-libs' 'mesa-orbis-ps4' 'libdrm' 'glibc')
+makedepends=('git' 'meson' 'xorg-server-devel' 'systemd')
+provides=("xf86-video-amdgpu=${pkgver}")
+conflicts=('xf86-video-amdgpu' 'xf86-video-amdgpu-ps4')
+replaces=('xf86-video-amdgpu-ps4')
+# Pinned by tag; makepkg verifies the tag exists. Record the resolved commit in the
+# release SBOM (packaging/sbom.py) so rebuilds are byte-traceable.
+source=("${pkgname}::git+${url}.git#tag=${_tag}"
+        "0001-ps4-cik-cursor-size.patch")
+sha256sums=('SKIP'
+            'SKIP')
+
+prepare() {
+  cd "$pkgname"
+  git apply "$srcdir/0001-ps4-cik-cursor-size.patch"
+}
+
+build() {
+  export CFLAGS="${CFLAGS/-march=x86-64-v[234]/-march=x86-64} -mtune=btver2"
+  arch-meson "$pkgname" build
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+  install -Dm644 "$pkgname/COPYING" "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+}

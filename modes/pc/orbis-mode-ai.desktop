@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Orbis: switch to AI
+Comment=NickLabs PS4 Orbis Linux — change personality (AI)
+Exec=/usr/lib/orbis/orbis-switch-gui ai
+Icon=preferences-system
+Terminal=false
+Categories=System;Settings;

@@ -1,0 +1,5 @@
+{
+  "schema": 1,
+  "note": "Versioned compatibility list. A title is listed only with a recorded test on named hardware, kernel, Mesa and Proton/Wine versions. Empty until Orbis has physical test receipts.",
+  "titles": []
+}

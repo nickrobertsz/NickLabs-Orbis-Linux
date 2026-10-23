@@ -1,0 +1,8 @@
+[Unit]
+Description=NickLabs Orbis — PC personality (desktop)
+Documentation=file:///usr/share/doc/orbis/ORBIS-ARCHITECTURE.md
+Requires=multi-user.target
+Wants=graphical.target display-manager.service
+After=multi-user.target
+Conflicts=orbis-gaming.target orbis-ai.target orbis-gaming-session.service orbis-llama.service
+AllowIsolate=yes

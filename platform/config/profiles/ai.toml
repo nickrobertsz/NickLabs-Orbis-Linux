@@ -1,0 +1,42 @@
+[profile]
+name = "ai"
+title = "AI"
+description = "Headless local inference server: no display manager, no compositor, no Steam. llama.cpp on CPU; Vulkan only behind a passing gate."
+target = "orbis-ai.target"
+display = false
+
+[vram]
+# CPU inference: the GPU only needs a minimal carve-out; the community server
+# payload recommendation is 128 MB. Every MB here is RAM the model cannot use.
+min_mb = 32
+preferred_mb = 128
+
+[vram.backend.vulkan]
+# Conservative: the loader default and most-tested size. RADV on this APU also
+# exposes GTT-backed memory as device-local, so a larger carve-out is not assumed
+# to help; the inference harness measures it.
+min_mb = 512
+preferred_mb = 1024
+
+[vram.backend.auto]
+min_mb = 32
+preferred_mb = 128
+
+[services]
+start = ["orbis-llama.service"]
+owned = ["orbis-llama.service", "llama-server"]
+# CPU backend: no process should hold the GPU at all.
+allow_gpu_clients = false
+
+[readiness]
+checks = [ { type = "http", url = "http://127.0.0.1:8081/health", timeout_s = 300 } ]
+
+[power]
+preset = "balanced"
+
+[sysctl]
+"vm.swappiness" = 10
+"vm.vfs_cache_pressure" = 50
+
+[budget]
+idle_used_mib_target = 300

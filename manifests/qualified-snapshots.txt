@@ -1,0 +1,3 @@
+# Arch Linux Archive snapshot dates Orbis may move to.
+# No date has been qualified on physical PS4 hardware yet; this is the build candidate.
+2026/10/20

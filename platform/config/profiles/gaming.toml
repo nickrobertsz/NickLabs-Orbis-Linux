@@ -1,0 +1,28 @@
+[profile]
+name = "gaming"
+title = "GAMING"
+description = "Controller-first full-screen session (Steam Big Picture or ES-DE) on hardware OpenGL; Vulkan titles only where qualified."
+target = "orbis-gaming.target"
+display = true
+
+[vram]
+min_mb = 1024
+preferred_mb = 2048
+
+[services]
+start = ["orbis-gaming-session.service"]
+owned = ["orbis-gaming-session.service", "steam", "steamwebhelper", "gamescope", "es-de",
+         "wineserver", "pressure-vessel*", "reaper", "gameoverlayui"]
+allow_gpu_clients = true
+
+[readiness]
+checks = [ { type = "unit", unit = "orbis-gaming-session.service", timeout_s = 120 } ]
+
+[power]
+preset = "performance"
+
+[sysctl]
+"vm.swappiness" = 20
+
+[budget]
+idle_used_mib_target = 1100

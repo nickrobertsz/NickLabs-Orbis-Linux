@@ -1,0 +1,27 @@
+# CI proves source/packaging correctness only. It is labelled separately from hardware tests:
+# a green CI run says nothing about a PS4.
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - run: sudo apt-get update && sudo apt-get install -y libvulkan-dev mesa-vulkan-drivers libegl1 glslc
+      - run: make test
+      - run: make probe VK_INCLUDE=/usr/include
+      - run: tools/gpu-probe/orbis-gpu-probe --json --all --level 1 | tee probe.json || true
+      - run: python3 tools/gpu-probe/gen_spv_header.py --check
+      - run: bash -n kernel/build-kernel.sh packaging/rootfs/build-rootfs.sh packaging/scripts/*.sh tests/hardware/qualify.sh
+      - run: python3 packaging/sbom.py > sbom.json
+  kernel-compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y clang lld llvm bc flex bison libelf-dev dwarves libssl-dev cpio
+      - run: kernel/build-kernel.sh aeolia-belize-6.15 --jobs 4
+      - uses: actions/upload-artifact@v4
+        with: { name: kernel-aeolia-belize-6.15-COMPILE-ONLY, path: out/kernel/aeolia-belize-6.15/ }

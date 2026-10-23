@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Orbis Dashboard
+Comment=NickLabs PS4 Orbis Linux control panel
+Exec=xdg-open http://127.0.0.1:8420/
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;Monitor;

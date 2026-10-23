@@ -1,0 +1,7 @@
+# GAMING personality. Steam is in [multilib]; Proton is downloaded by Steam itself.
+steam
+openbox
+xterm
+gamemode
+lib32-gamemode
+wine

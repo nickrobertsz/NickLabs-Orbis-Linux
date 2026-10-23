@@ -1,0 +1,10 @@
+[Unit]
+Description=NickLabs Orbis LAN dashboard socket
+
+[Socket]
+ListenStream=8420
+# Only the first connection activates orbis-web; it exits again after idle_exit_s.
+Accept=no
+
+[Install]
+WantedBy=sockets.target

@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "harness_version": "0.1.0",
+  "time": "2026-10-23T14:35:05-0700",
+  "pins": {
+    "kernel_release": "6.18.44-fc-v153",
+    "mesa_version": null,
+    "llama_build": "b11845 9ff0d7e90f0faaa7c16017e6dcf9cf91c50a100e",
+    "model_sha256": "57ace22ad2b8e6a7a4bd27940e82846898177c5a6ca0e8797737352558dcab06",
+    "model": "/home/claude/models/orbis-tiny-f32.gguf"
+  },
+  "inference_gate": {
+    "passed": false,
+    "hardware_gpu_evidence": [],
+    "short_prompts": true,
+    "long_prefill": true,
+    "server_mixed_greedy_identical": true,
+    "intermediate_tensors": true,
+    "max_prompt_tokens": 1024,
+    "time": "2026-10-23T14:35:05-0700",
+    "summary": "short=True long=True server=True tensors=True max_ctx_pass=1024 [NO EVIDENCE THE CANDIDATE RAN ON A HARDWARE AMD GPU: not a GPU result]"
+  },
+  "longrun_gate": null,
+  "evidence_dir": "/home/claude/campaigns/run-pass"
+}

@@ -1,0 +1,5 @@
+{"file": "0001-ps4-cik-cursor-size.patch",
+ "from": "DionKill/ps4-video-archlinux@57e0f8ecc7a1df9b9664d682b19fadfe3e336f02 xf86-video-amdgpu-ps4/ps4-xf86-video-amdgpu.patch",
+ "change": "use the 64x64 cursor size instead of CIK's 128x128 on CI-family parts (Liverpool reports family CI)",
+ "license": "not stated by the source repository; trivial modification of MIT-licensed xf86-video-amdgpu — confirm with the author before release (see UPSTREAM-CREDITS.md)",
+ "orbis_check": "not built by Orbis yet"}

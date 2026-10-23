@@ -1,0 +1,6 @@
+[Unit]
+Description=NickLabs Orbis — gaming personality workloads
+Before=slices.target
+
+[Slice]
+MemoryAccounting=yes

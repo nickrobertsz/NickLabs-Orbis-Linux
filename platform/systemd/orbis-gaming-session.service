@@ -1,0 +1,25 @@
+[Unit]
+Description=NickLabs Orbis GAMING session on tty1
+After=systemd-user-sessions.service plymouth-quit-wait.service orbisd.service
+Conflicts=display-manager.service getty@tty1.service
+PartOf=orbis-gaming.target
+
+[Service]
+Type=simple
+# First regular user by default; the installer writes a drop-in with the chosen account.
+User=1000
+PAMName=login
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+StandardInput=tty-fail
+StandardOutput=journal
+StandardError=journal
+UtmpIdentifier=tty1
+UtmpMode=user
+Environment=XDG_SESSION_TYPE=x11
+Environment=XDG_SESSION_CLASS=user
+ExecStart=/usr/lib/orbis/orbis-gaming-session
+Slice=orbis-gaming.slice
+Restart=on-failure
+RestartSec=3

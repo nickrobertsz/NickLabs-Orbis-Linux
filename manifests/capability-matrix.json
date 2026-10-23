@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "as_of": "2026-10-23",
+  "states": {
+    "VERIFIED": "An Orbis release was tested on physical hardware of this group and a receipt is recorded in tests/hardware/receipts/. (None yet.)",
+    "UPSTREAM_REPORTED": "An upstream project recorded a pass on at least one console of this group with a different stack. Plausible, not proven for Orbis.",
+    "UNVERIFIED": "No evidence either way for this group.",
+    "UNSUPPORTED": "Known not to work, or not exposed by the kernel/platform.",
+    "BLOCKED": "Cannot work until a named prerequisite is solved.",
+    "PASSED_ON_THIS_DEVICE": "Runtime overlay: an Orbis check passed on this console during this boot.",
+    "FAILED": "Runtime overlay: an Orbis check failed on this console during this boot."
+  },
+  "groups": {
+    "fat-aeolia": "CUH-10xx/11xx/early 12xx, Aeolia southbridge, Liverpool GPU",
+    "fat-belize": "late CUH-12xx, Belize southbridge, Liverpool GPU",
+    "slim-belize": "CUH-2xxx with Belize",
+    "slim-baikal": "CUH-2xxx with Baikal",
+    "pro-belize": "CUH-7xxx with Belize, Gladius GPU",
+    "pro-baikal": "CUH-7xxx with Baikal, Gladius GPU"
+  },
+  "default_state": "UNVERIFIED",
+  "capabilities": [
+    {
+      "id": "boot.kernel", "category": "boot", "title": "Kernel boots via PS4 loader",
+      "by_group": {
+        "fat-aeolia": {"state": "UPSTREAM_REPORTED", "source": "aday1/ps4-hdmi-blackscreen@5c1c2fc", "evidence": "CUH-12xx Aeolia booted 6.15.4-crashnt-4.7 (protocol 2.15)"},
+        "fat-belize": {"state": "UPSTREAM_REPORTED", "source": "feeRnt/ps4-linux-12xx README", "evidence": "CUH-1215/1216 Belize reported working with 6.15.4"},
+        "slim-baikal": {"state": "UPSTREAM_REPORTED", "source": "meerzulee/linux-psx@2138063", "evidence": "7.2.11 boot observed on one Slim Baikal B1"},
+        "pro-baikal": {"state": "UPSTREAM_REPORTED", "source": "feeRnt/ps4-linux-12xx README", "evidence": "CUH-7116B/7202B/7216B reported on 5.4.247 only (no 3D on 5.4)"}
+      }
+    },
+    {
+      "id": "boot.external_usb_root", "category": "storage", "title": "External USB SSD root filesystem",
+      "notes": "UAS-capable adapter strongly preferred; do not root through a USB hub.",
+      "by_group": {
+        "slim-baikal": {"state": "UPSTREAM_REPORTED", "source": "meerzulee/linux-psx@2138063", "evidence": "RW root booted on 7.2"},
+        "fat-aeolia": {"state": "UPSTREAM_REPORTED", "source": "aday1/ps4-hdmi-blackscreen", "evidence": "EndeavourOS from USB on CUH-12xx"}
+      }
+    },
+    {
+      "id": "storage.internal_hdd_root", "category": "storage", "title": "Root on internal HDD image (linux.img)",
+      "notes": "Orbis v1 does not install to the internal drive; it never writes Sony partitions.",
+      "by_group": {
+        "fat-aeolia": {"state": "UPSTREAM_REPORTED", "source": "DionKill/ps4-linux-tutorial", "evidence": "community internal-install method (slow)"},
+        "fat-belize": {"state": "UPSTREAM_REPORTED", "source": "DionKill/ps4-linux-tutorial", "evidence": "community internal-install method (slow)"},
+        "slim-baikal": {"state": "UNSUPPORTED", "source": "DionKill/ps4-linux-tutorial; linux-psx", "evidence": "Baikal internal SATA is experimental/read-mostly upstream"},
+        "pro-baikal": {"state": "UNSUPPORTED", "source": "DionKill/ps4-linux-tutorial", "evidence": "no Baikal internal install support"}
+      },
+      "orbis_policy": "UNSUPPORTED"
+    },
+    {
+      "id": "display.hdmi_1080p60", "category": "display", "title": "1080p60 HDMI console + desktop modeset",
+      "notes": "Requires the ps4_bridge ICC-delay fix (present in feeRnt 6.15.4 crashnt-4.7) and avoiding the 120 Hz mode (Orbis kernel patch 0001).",
+      "by_group": {
+        "fat-aeolia": {"state": "UPSTREAM_REPORTED", "source": "aday1/ps4-hdmi-blackscreen@58ce86b", "evidence": "CUH-12xx MN864729: modeset + Hyprland KMS after moving to 6.15.4-crashnt-4.7"},
+        "slim-baikal": {"state": "UPSTREAM_REPORTED", "source": "meerzulee/linux-psx@2138063", "evidence": "Liverpool 1080p at 60 Hz, OpenGL 4.6"}
+      }
+    },
+    {"id": "display.hotplug", "category": "display", "title": "Monitor hotplug / EDID",
+     "notes": "ps4_bridge advertises hard-coded modes; EDID is empty on tested hardware. Tutorial: hotplug not supported on 6.18+.",
+     "by_group": {"fat-aeolia": {"state": "UNSUPPORTED", "source": "aday1; DionKill tutorial", "evidence": "EDID 0 bytes; hard-coded modes"}}},
+    {"id": "display.4k", "category": "display", "title": "4K output (Pro)",
+     "by_group": {"pro-belize": {"state": "UPSTREAM_REPORTED", "source": "DionKill/ps4-linux-tutorial setup.md", "evidence": "4K only on Pro with 6.18+ kernels"},
+                  "pro-baikal": {"state": "UPSTREAM_REPORTED", "source": "DionKill/ps4-linux-tutorial setup.md", "evidence": "4K only on Pro with 6.18+ kernels"}}},
+    {"id": "gpu.gl.hw", "category": "graphics", "title": "Hardware OpenGL (radeonsi)",
+     "runtime_check": "gpu.gl.hw",
+     "by_group": {"slim-baikal": {"state": "UPSTREAM_REPORTED", "source": "meerzulee/linux-psx", "evidence": "OpenGL 4.6 with Mesa 26.1.7"},
+                  "fat-aeolia": {"state": "UPSTREAM_REPORTED", "source": "aday1/ps4-hdmi-blackscreen", "evidence": "radeonsi/liverpool OpenGL 4.6, Mesa 25.1"}}},
+    {"id": "gpu.vk.device", "category": "graphics", "title": "RADV Vulkan device present", "runtime_check": "gpu.vk.device"},
+    {"id": "gpu.vk.graphics", "category": "graphics", "title": "Vulkan graphics (sustained)",
+     "by_group": {"slim-baikal": {"state": "UNVERIFIED", "source": "linux-psx docs/MESA-TESTING.md", "evidence": "cube/depth hangs on 26.2.5 dev2/dev3; dev5 passed 120 cube frames on one console; system adoption rolled back"}}},
+    {"id": "gpu.vk.compute", "category": "graphics", "title": "Vulkan compute correctness", "runtime_check": "gpu.vk.compute"},
+    {"id": "gpu.vk.inference", "category": "ai", "title": "Vulkan LLM inference (gate)",
+     "runtime_check": "gpu.vk.inference",
+     "notes": "Upstream: all 25 layers offloaded with exact short-prompt output; a longer prompt faulted during prefill and recovery failed (carlosgeorges.com/notes/ps4-linux.html). Root cause unknown.",
+     "orbis_policy": "BLOCKED"},
+    {"id": "gpu.video.decode", "category": "graphics", "title": "UVD H.264 hardware decode",
+     "by_group": {"slim-baikal": {"state": "UNVERIFIED", "source": "linux-psx docs/UVD.md", "evidence": "experimental 1080p30 runtime; default boot falls back to software"}},
+     "orbis_policy": "UNSUPPORTED"},
+    {"id": "gpu.video.encode", "category": "graphics", "title": "VCE hardware encode", "orbis_policy": "UNSUPPORTED",
+     "notes": "Not qualified anywhere upstream."},
+    {"id": "audio.hdmi", "category": "audio", "title": "HDMI audio",
+     "by_group": {"slim-baikal": {"state": "UPSTREAM_REPORTED", "source": "meerzulee/linux-psx", "evidence": "44.1 kHz clean; native 48 kHz broken"}}},
+    {"id": "net.ethernet", "category": "network", "title": "Built-in Ethernet",
+     "by_group": {"slim-baikal": {"state": "UPSTREAM_REPORTED", "source": "meerzulee/linux-psx", "evidence": "native psx0 driver on 7.2 (experimental; no unload/reset)"},
+                  "pro-baikal": {"state": "UNVERIFIED", "source": "DionKill/ps4-linux-tutorial", "evidence": "Ethernet may not work on Pro Baikal"}}},
+    {"id": "net.wifi", "category": "network", "title": "Built-in Wi-Fi",
+     "notes": "Chipset varies: Marvell 88W8797/8897 (Torus) or MediaTek MT7668. Firmware must be operator-supplied (licensing).",
+     "by_group": {"fat-belize": {"state": "UPSTREAM_REPORTED", "source": "feeRnt/ps4-linux-12xx README", "evidence": "CUH-1215/1216 Marvell 88W8897 with 6.15.4 patches"}}},
+    {"id": "net.bluetooth", "category": "network", "title": "Built-in Bluetooth"},
+    {"id": "input.ds4", "category": "input", "title": "DualShock 4 (USB/BT)",
+     "notes": "Kernel has HID_SONY/HID_PLAYSTATION. BT pairing is not persistent across payload launches.",
+     "by_group": {}},
+    {"id": "input.ds4_pairing_persistence", "category": "input", "title": "DS4 Bluetooth pairing survives reboot",
+     "orbis_policy": "UNSUPPORTED", "notes": "Pairing keys live in the PS4 OS; must re-pair every boot (DionKill tutorial issues.md)."},
+    {"id": "sensors.temperature", "category": "thermal", "title": "APU temperature (k10temp)", "runtime_check": "sensors.temperature",
+     "by_group": {"slim-baikal": {"state": "UPSTREAM_REPORTED", "source": "linux-psx", "evidence": "historical k10temp readings on 6.18"}}},
+    {"id": "sensors.fan_control", "category": "thermal", "title": "Fan speed reading / control", "runtime_check": "sensors.fan_control",
+     "orbis_policy": "UNSUPPORTED", "notes": "No fan hwmon is exposed by the kernels inspected. Fan is managed by the southbridge firmware."},
+    {"id": "power.suspend", "category": "power", "title": "Suspend / hibernate", "orbis_policy": "UNSUPPORTED",
+     "notes": "CONFIG_SUSPEND and CONFIG_HIBERNATION are unset in the PS4 kernels inspected. Orbis masks sleep targets."},
+    {"id": "power.reboot_to_linux", "category": "power", "title": "Reboot directly back into Linux", "orbis_policy": "UNSUPPORTED",
+     "notes": "Reboot returns to the PS4 system software; operator relaunches the payload."},
+    {"id": "power.kexec_relaunch", "category": "power", "title": "Linux-to-Linux kexec relaunch",
+     "notes": "Reported working with custom handoff patches (carlosgeorges.com); not present in Orbis kernels. Cannot change VRAM.",
+     "orbis_policy": "UNVERIFIED"},
+    {"id": "memory.vram_runtime_resize", "category": "memory", "title": "Change VRAM carve-out without reboot", "orbis_policy": "UNSUPPORTED",
+     "notes": "Carve-out is set by the loader (vram.txt) before Linux starts (linux-psx docs/PS4-DYNAMIC-MEMORY.md)."},
+    {"id": "optical.bluray", "category": "storage", "title": "Blu-ray drive", "orbis_policy": "UNSUPPORTED",
+     "by_group": {"slim-baikal": {"state": "UNSUPPORTED", "source": "linux-psx", "evidence": "not detected"}}}
+  ]
+}

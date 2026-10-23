@@ -1,0 +1,4 @@
+#!/usr/bin/python3 -I
+import sys
+from orbis.pkgguard import main
+sys.exit(main())

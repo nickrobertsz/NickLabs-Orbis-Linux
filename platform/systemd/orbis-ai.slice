@@ -1,0 +1,8 @@
+[Unit]
+Description=NickLabs Orbis — ai personality workloads
+Before=slices.target
+
+[Slice]
+MemoryAccounting=yes
+# Keep the model server from starving sshd/orbisd: reclaim pressure starts here.
+MemoryHigh=92%

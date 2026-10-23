@@ -1,0 +1,31 @@
+[profile]
+name = "pc"
+title = "PC"
+description = "Lightweight XFCE desktop on hardware-accelerated radeonsi (X11). Browsing, files, development, media."
+target = "orbis-pc.target"
+display = true
+
+[vram]
+# Loader default; the most-tested carve-out in the community stack.
+min_mb = 512
+preferred_mb = 1024
+
+[services]
+start = ["display-manager.service"]
+# Processes/units this personality owns: they must be gone after switching away.
+owned = ["display-manager.service", "lightdm", "lightdm-gtk-greeter", "Xorg", "xfce4-session",
+         "xfwm4", "xfdesktop", "xfce4-panel", "xfsettingsd", "Thunar", "xfce4-terminal"]
+allow_gpu_clients = true
+
+[readiness]
+checks = [ { type = "unit", unit = "display-manager.service", timeout_s = 90 } ]
+
+[power]
+preset = "balanced"
+
+[sysctl]
+"vm.swappiness" = 60
+
+[budget]
+# Targets to be confirmed by measurement on hardware (MODE-RESOURCE-BUDGET.md).
+idle_used_mib_target = 750

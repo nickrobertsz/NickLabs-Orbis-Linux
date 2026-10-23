@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NickLabs Orbis</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <div>
+      <div class="brand-line"><b>NICKLABS</b> / PS4 ORBIS LINUX</div>
+      <div class="brand-sub">PC · GAMING · AI</div>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button role="tab" data-tab="ai">AI</button>
+    <button role="tab" data-tab="gaming">Gaming</button>
+    <button role="tab" data-tab="system">System</button>
+  </nav>
+  <div class="chips">
+    <span class="chip" id="chip-mode">MODE —</span>
+    <span class="chip" id="chip-gpu">GPU —</span>
+    <span class="chip dim" id="chip-conn">offline</span>
+  </div>
+</header>
+
+<main>
+  <!-- ============================== OVERVIEW -->
+  <section id="tab-overview" class="tab">
+    <div class="alerts" id="alerts"></div>
+    <div class="modes" id="modes">
+      <!-- filled by app.js from the profiles orbisd reports -->
+    </div>
+
+    <div class="grid">
+      <article class="panel">
+        <h2>Memory <span class="hint">shared GDDR5</span></h2>
+        <div class="meter"><div class="fill" id="mem-fill"></div></div>
+        <dl class="kv" id="mem-kv"></dl>
+      </article>
+      <article class="panel">
+        <h2>GPU memory <span class="hint">loader carve-out + GTT</span></h2>
+        <div class="meter"><div class="fill violet" id="vram-fill"></div></div>
+        <dl class="kv" id="vram-kv"></dl>
+      </article>
+      <article class="panel">
+        <h2>CPU <span class="hint">8× Jaguar</span></h2>
+        <div class="meter"><div class="fill" id="cpu-fill"></div></div>
+        <dl class="kv" id="cpu-kv"></dl>
+      </article>
+      <article class="panel">
+        <h2>Thermal</h2>
+        <dl class="kv" id="thermal-kv"></dl>
+        <p class="note" id="fan-note"></p>
+      </article>
+      <article class="panel">
+        <h2>Network</h2>
+        <dl class="kv" id="net-kv"></dl>
+      </article>
+      <article class="panel">
+        <h2>Boot <span class="hint">PS4 loader files</span></h2>
+        <dl class="kv" id="boot-kv"></dl>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============================== AI -->
+  <section id="tab-ai" class="tab" hidden>
+    <div class="grid two">
+      <article class="panel">
+        <h2>Inference service</h2>
+        <dl class="kv" id="ai-kv"></dl>
+        <p class="note" id="ai-backend-note"></p>
+      </article>
+      <article class="panel">
+        <h2>Settings <span class="hint">applied on next service start</span></h2>
+        <form id="ai-form" class="form">
+          <label>Model <select name="model" id="ai-model"></select></label>
+          <label>Backend
+            <select name="backend">
+              <option value="cpu">CPU (always available)</option>
+              <option value="vulkan">Vulkan (only with a passing gate)</option>
+              <option value="auto">Auto</option>
+            </select>
+          </label>
+          <label>Context (max) <input name="ctx_size" type="number" min="256" max="32768" step="256"></label>
+          <label>Power
+            <select name="power_preset">
+              <option value="quiet">Quiet</option><option value="balanced">Balanced</option>
+              <option value="performance">Performance</option>
+            </select>
+          </label>
+          <label class="check"><input name="lan_api" type="checkbox"> OpenAI-compatible API on the LAN (bearer key)</label>
+          <button type="submit" class="btn">Save</button>
+          <span class="status-text" id="ai-save-status"></span>
+        </form>
+      </article>
+    </div>
+    <article class="panel">
+      <h2>Chat <span class="hint">local model, nothing leaves this console</span></h2>
+      <div class="chat" id="chat-log" aria-live="polite"></div>
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" autocomplete="off" placeholder="Ask the local model…">
+        <button class="btn" type="submit">Send</button>
+      </form>
+    </article>
+  </section>
+
+  <!-- ============================== GAMING -->
+  <section id="tab-gaming" class="tab" hidden>
+    <div class="grid two">
+      <article class="panel">
+        <h2>Session</h2>
+        <dl class="kv" id="gaming-kv"></dl>
+        <form id="gaming-form" class="form inline">
+          <label>Front end
+            <select name="frontend">
+              <option value="steam-gamepadui">Steam Big Picture</option>
+              <option value="es-de">ES-DE</option>
+              <option value="kodi">Kodi</option>
+              <option value="none">None</option>
+            </select>
+          </label>
+          <button class="btn" type="submit">Save</button>
+        </form>
+      </article>
+      <article class="panel">
+        <h2>What to expect</h2>
+        <ul class="plain">
+          <li>OpenGL titles run on radeonsi (hardware) when <code>gpu.gl.hw</code> passes.</li>
+          <li>Vulkan, DXVK and VKD3D are <b>not qualified</b> on Liverpool yet; WineD3D (OpenGL) is the fallback.</li>
+          <li>The compatibility list below is versioned; a launcher entry is not proof a title runs.</li>
+          <li>DualShock 4 Bluetooth pairing does not survive a payload relaunch; USB always works.</li>
+        </ul>
+      </article>
+    </div>
+    <article class="panel">
+      <h2>Compatibility list</h2>
+      <table class="table" id="compat-table"><thead><tr><th>Title</th><th>Renderer</th><th>Status</th><th>Stack</th><th>Notes</th></tr></thead><tbody></tbody></table>
+    </article>
+  </section>
+
+  <!-- ============================== SYSTEM -->
+  <section id="tab-system" class="tab" hidden>
+    <div class="grid two">
+      <article class="panel">
+        <h2>Diagnostics</h2>
+        <div class="row">
+          <button class="btn" id="doctor-quick">Run doctor</button>
+          <button class="btn ghost" id="doctor-deep">Deep (Vulkan compute)</button>
+          <span class="status-text" id="doctor-status"></span>
+        </div>
+        <ul class="findings" id="findings"></ul>
+      </article>
+      <article class="panel">
+        <h2>Software</h2>
+        <dl class="kv" id="sw-kv"></dl>
+        <div class="row">
+          <button class="btn danger" id="reboot-btn">Reboot…</button>
+        </div>
+      </article>
+    </div>
+    <article class="panel">
+      <h2>Hardware support matrix <span class="hint" id="cap-group"></span></h2>
+      <table class="table" id="cap-table"><thead><tr><th>Capability</th><th>State</th><th>Evidence / source</th></tr></thead><tbody></tbody></table>
+    </article>
+    <article class="panel">
+      <h2>Mode transitions</h2>
+      <table class="table" id="log-table"><thead><tr><th>When</th><th>From → To</th><th>Method</th><th>Result</th></tr></thead><tbody></tbody></table>
+    </article>
+  </section>
+</main>
+
+<!-- plan / confirmation dialog -->
+<dialog id="plan-dialog">
+  <form method="dialog" class="dialog">
+    <h2 id="plan-title">Switch</h2>
+    <div id="plan-body"></div>
+    <div class="progress" id="plan-progress" hidden></div>
+    <div class="row end">
+      <button value="cancel" class="btn ghost" id="plan-cancel">Cancel</button>
+      <button value="go" class="btn" id="plan-go">Proceed</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- login -->
+<dialog id="login-dialog">
+  <form class="dialog" id="login-form">
+    <h2>Unlock Orbis</h2>
+    <p class="note">Enter the dashboard token. On the console: <code>sudo cat /etc/orbis/web-token</code></p>
+    <input type="password" id="login-token" autocomplete="current-password" required>
+    <p class="error" id="login-error"></p>
+    <div class="row end"><button class="btn" type="submit">Unlock</button></div>
+  </form>
+</dialog>
+
+<footer class="foot">NickLabs PS4 Orbis Linux — an independent open-source project. Not affiliated with Sony Interactive Entertainment.</footer>
+<script src="app.js"></script>
+</body>
+</html>

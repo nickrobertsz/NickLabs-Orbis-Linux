@@ -1,0 +1,5 @@
+out/
+__pycache__/
+*.pyc
+tools/gpu-probe/orbis-gpu-probe
+tools/gpu-probe/shaders/*.spv

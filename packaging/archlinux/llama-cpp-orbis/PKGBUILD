@@ -1,0 +1,52 @@
+# NickLabs Orbis — llama.cpp for Jaguar: CPU build (default) + separate Vulkan build.
+# ISA policy: AVX + F16C only. No AVX2/FMA/BMI2 (Jaguar lacks them). Verified with
+# `orbis isa-audit` on host builds of this exact tag (docs/RELEASE-STATUS.md).
+pkgname=llama-cpp-orbis
+_tag=b11845
+_commit=9ff0d7e90f0faaa7c16017e6dcf9cf91c50a100e
+pkgver=${_tag#b}
+pkgrel=1
+pkgdesc="llama.cpp ${_tag} built for AMD Jaguar (PS4): CPU server + gated Vulkan build"
+arch=('x86_64')
+url="https://github.com/ggml-org/llama.cpp"
+license=('MIT')
+depends=('gcc-libs' 'glibc' 'vulkan-icd-loader')
+makedepends=('git' 'cmake' 'ninja' 'shaderc' 'glslang' 'vulkan-headers' 'spirv-headers')
+provides=('llama.cpp' 'llama-cpp')
+conflicts=('llama.cpp' 'llama-cpp' 'llama.cpp-vulkan')
+source=("llama.cpp::git+${url}.git#tag=${_tag}")
+sha256sums=('SKIP')
+
+_common=(-G Ninja -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF -DGGML_AVX=ON -DGGML_AVX2=OFF
+         -DGGML_FMA=OFF -DGGML_F16C=ON -DGGML_BMI2=OFF -DGGML_AVX512=OFF -DGGML_AVX_VNNI=OFF
+         -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=OFF -DGGML_CCACHE=OFF
+         -DCMAKE_C_FLAGS="-march=btver2" -DCMAKE_CXX_FLAGS="-march=btver2")
+
+prepare() {
+  [ "$(git -C llama.cpp rev-parse HEAD)" = "$_commit" ] || { echo "tag ${_tag} moved!"; return 1; }
+}
+
+build() {
+  cmake -S llama.cpp -B build-cpu "${_common[@]}" -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build-cpu
+  cmake -S llama.cpp -B build-vk "${_common[@]}" -DGGML_VULKAN=ON -DCMAKE_INSTALL_PREFIX=/usr/lib/orbis/llama/vulkan
+  cmake --build build-vk --target llama-server llama-cli llama-perplexity llama-eval-callback
+}
+
+check() {
+  # Fail the package if any shipped binary contains instructions Jaguar cannot execute.
+  if command -v orbis >/dev/null; then
+    orbis isa-audit build-cpu/bin build-vk/bin
+  fi
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build-cpu
+  install -d "$pkgdir/usr/lib/orbis/llama/vulkan"
+  for b in llama-server llama-cli llama-perplexity llama-eval-callback; do
+    install -Dm755 "build-vk/bin/$b" "$pkgdir/usr/lib/orbis/llama/vulkan/$b"
+  done
+  cp -a build-vk/bin/*.so* "$pkgdir/usr/lib/orbis/llama/vulkan/"
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/orbis/llama-build" <<<"${_tag} ${_commit}"
+  install -Dm644 llama.cpp/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

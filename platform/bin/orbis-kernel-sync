@@ -1,0 +1,22 @@
+#!/bin/sh
+# Called by 95-orbis-kernel-sync.hook with changed vmlinuz paths on stdin.
+set -u
+rc=0
+while read -r path; do
+    kdir="/${path%/vmlinuz}"
+    rel="$(basename "$kdir")"
+    initrd="/usr/lib/orbis/initramfs/initramfs.cpio.gz"
+    if [ ! -f "$initrd" ]; then
+        echo ":: orbis: no initramfs at $initrd; kernel $rel not staged" >&2; rc=1; continue
+    fi
+    if ! orbis boot check-kernel "/$path" >/dev/null; then
+        echo ":: orbis: kernel $rel FAILED the PS4 loader check; not staged:" >&2
+        orbis boot check-kernel "/$path" >&2; rc=1; continue
+    fi
+    if orbis --direct boot install-kernel "/$path" "$initrd"; then
+        echo ":: orbis: staged $rel on the PS4 boot partition (previous kept as bzImage.orbis-prev)"
+    else
+        echo ":: orbis: could not stage $rel (is the boot partition mounted?)" >&2; rc=1
+    fi
+done
+exit $rc

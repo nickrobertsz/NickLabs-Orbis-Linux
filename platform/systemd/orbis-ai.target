@@ -1,0 +1,9 @@
+[Unit]
+Description=NickLabs Orbis — AI personality (headless inference server)
+Documentation=file:///usr/share/doc/orbis/ORBIS-ARCHITECTURE.md
+Requires=multi-user.target
+Wants=orbis-llama.service
+After=multi-user.target
+# Headless: nothing graphical may run in this personality.
+Conflicts=orbis-pc.target orbis-gaming.target graphical.target display-manager.service orbis-gaming-session.service
+AllowIsolate=yes

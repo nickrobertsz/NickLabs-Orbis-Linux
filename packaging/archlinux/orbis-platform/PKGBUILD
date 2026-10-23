@@ -1,0 +1,66 @@
+# NickLabs Orbis — platform layer: mode engine, orbisd, orbis-web, CLI, units, hooks, UI, GPU probe.
+pkgname=orbis-platform
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="NickLabs PS4 Orbis Linux platform layer (PC · GAMING · AI mode engine, diagnostics, LAN dashboard)"
+arch=('x86_64')
+url="https://github.com/nicklabs/ps4-orbis-linux"
+license=('MIT')
+depends=('python>=3.11' 'systemd' 'util-linux' 'dosfstools' 'binutils' 'vulkan-icd-loader' 'libglvnd')
+makedepends=('vulkan-headers' 'gcc' 'make')
+optdepends=('zenity: desktop mode-switch confirmation dialogs'
+            'xorg-xinit: GAMING session' 'openbox: GAMING session window manager')
+backup=('etc/orbis/orbis.toml')
+install=orbis-platform.install
+# Built from the repository checkout this PKGBUILD lives in (packaging/build-packages.sh),
+# plus the pinned initramfs-ps4 source (GPL-3.0) used to build the boot initramfs on-device.
+_initramfs_commit=c21a72044adf6c13b773c40f16bae2a9cb83523e
+source=("initramfs-ps4::git+https://github.com/GayCorp/initramfs-ps4.git#commit=${_initramfs_commit}")
+sha256sums=('SKIP')
+
+_root() { echo "${startdir}/../../.."; }
+
+build() {
+  make -C "$(_root)/tools/gpu-probe" VK_INCLUDE=/usr/include ARCHFLAGS="-march=x86-64 -mtune=btver2" orbis-gpu-probe
+}
+
+package() {
+  local R; R="$(_root)"
+  local site; site="$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+  install -d "$pkgdir$site"
+  cp -r "$R/platform/orbis" "$pkgdir$site/"
+  find "$pkgdir$site/orbis" -name __pycache__ -prune -exec rm -rf {} +
+  python -m compileall -q "$pkgdir$site/orbis"
+  install -Dm755 "$R/platform/bin/orbis" "$pkgdir/usr/bin/orbis"
+  for b in orbisd orbis-web orbis-ai-launch orbis-pkg-guard orbis-gaming-session orbis-gaming-xinitrc \
+           orbis-switch-gui orbis-kernel-sync; do
+    install -Dm755 "$R/platform/bin/$b" "$pkgdir/usr/lib/orbis/$b"
+  done
+  install -Dm755 "$R/tools/gpu-probe/orbis-gpu-probe" "$pkgdir/usr/lib/orbis/orbis-gpu-probe"
+  install -Dm755 "$R/tools/inference-harness/orbis_infer_harness.py" "$pkgdir/usr/bin/orbis-infer-harness"
+  install -Dm755 "$R/packaging/initramfs/build_initramfs.py" "$pkgdir/usr/lib/orbis/build_initramfs.py"
+  install -d "$pkgdir/usr/share/orbis/initramfs-ps4-src"
+  cp -a "$srcdir/initramfs-ps4/." "$pkgdir/usr/share/orbis/initramfs-ps4-src/"
+  rm -rf "$pkgdir/usr/share/orbis/initramfs-ps4-src/.git"
+  install -Dm644 "$R/manifests/qualified-snapshots.txt" "$pkgdir/usr/share/orbis/qualified-snapshots"
+  install -Dm755 "$R/packaging/scripts/orbis-update.sh" "$pkgdir/usr/bin/orbis-update"
+  install -Dm755 "$R/platform/generators/orbis-mode-generator" "$pkgdir/usr/lib/systemd/system-generators/orbis-mode-generator"
+  for u in "$R"/platform/systemd/*; do install -Dm644 "$u" "$pkgdir/usr/lib/systemd/system/$(basename "$u")"; done
+  install -Dm644 "$R/platform/misc/sleep-90-orbis.conf" "$pkgdir/usr/lib/systemd/sleep.conf.d/90-orbis.conf"
+  install -Dm644 "$R/platform/misc/logind-90-orbis.conf" "$pkgdir/usr/lib/systemd/logind.conf.d/90-orbis.conf"
+  install -Dm644 "$R/platform/misc/sysctl-90-orbis.conf" "$pkgdir/usr/lib/sysctl.d/90-orbis.conf"
+  install -Dm644 "$R/platform/misc/sysusers-orbis.conf" "$pkgdir/usr/lib/sysusers.d/orbis.conf"
+  install -Dm644 "$R/platform/misc/tmpfiles-orbis.conf" "$pkgdir/usr/lib/tmpfiles.d/orbis.conf"
+  install -Dm644 "$R/platform/xorg/10-orbis-ps4-1080p60.conf" "$pkgdir/usr/share/X11/xorg.conf.d/10-orbis-ps4-1080p60.conf"
+  for h in "$R"/platform/pacman-hooks/*.hook; do install -Dm644 "$h" "$pkgdir/usr/share/libalpm/hooks/$(basename "$h")"; done
+  install -Dm644 "$R/platform/config/orbis.toml" "$pkgdir/usr/share/orbis/orbis.toml"
+  install -Dm644 "$R/platform/config/orbis.toml" "$pkgdir/etc/orbis/orbis.toml"
+  for p in "$R"/platform/config/profiles/*.toml; do install -Dm644 "$p" "$pkgdir/usr/share/orbis/profiles/$(basename "$p")"; done
+  install -Dm644 "$R/manifests/capability-matrix.json" "$pkgdir/usr/share/orbis/capability-matrix.json"
+  install -Dm644 "$R/manifests/gaming-compat.json" "$pkgdir/usr/share/orbis/gaming-compat.json"
+  install -Dm644 "$R/manifests/firmware.json" "$pkgdir/usr/share/orbis/firmware.json"
+  for f in "$R"/ui/*; do install -Dm644 "$f" "$pkgdir/usr/share/orbis/ui/$(basename "$f")"; done
+  for f in "$R"/modes/pc/*.desktop; do install -Dm644 "$f" "$pkgdir/usr/share/applications/$(basename "$f")"; done
+  for f in "$R"/docs/*.md; do install -Dm644 "$f" "$pkgdir/usr/share/doc/orbis/$(basename "$f")"; done
+  install -Dm644 "$R/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

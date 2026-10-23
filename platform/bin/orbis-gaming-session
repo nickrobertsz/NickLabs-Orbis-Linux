@@ -1,0 +1,8 @@
+#!/bin/sh
+# NickLabs Orbis — GAMING session launcher (runs as the gaming user on tty1).
+# X11 on the PS4-patched amdgpu DDX. gamescope is not the default: it needs Vulkan
+# presentation features whose stability on Liverpool is not qualified.
+set -eu
+frontend="$(python3 -I -c 'from orbis import config; print(config.load_config().get("gaming", {}).get("frontend", "steam-gamepadui"))' 2>/dev/null || echo steam-gamepadui)"
+export ORBIS_GAMING_FRONTEND="$frontend"
+exec xinit /usr/lib/orbis/orbis-gaming-xinitrc -- :0 vt1 -keeptty -nolisten tcp -br
