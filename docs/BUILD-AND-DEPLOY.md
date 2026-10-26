@@ -27,6 +27,8 @@ make kernel TARGET=aeolia-belize-6.15
 # → out/kernel/aeolia-belize-6.15/{bzImage,config,modules-<rel>.tar,build-manifest.json,bzimage-check.json,SHA256SUMS}
 ```
 
+Expect about 30 minutes on 2 cores, with 8 GB RAM sufficient. Orbis turns Clang LTO off (`CONFIG_LTO_NONE=y`), because the upstream full-LTO link was OOM-killed on an 8 GB machine.
+
 `kernel/build-kernel.sh`:
 1. clones the pinned tag and **verifies the commit** (`108ef97…`);
 2. applies `kernel/patches/aeolia-belize-6.15/series`;

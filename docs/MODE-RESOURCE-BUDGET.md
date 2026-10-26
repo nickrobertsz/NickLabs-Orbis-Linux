@@ -29,7 +29,7 @@ These numbers are from the x86 build host, not the PS4. Python 3.13, idle, fixtu
 
 | Process | PSS | RSS | Notes |
 |---|---|---|---|
-| `orbisd` | **17.2 MiB** | 24.4 MiB | always on; owns the Unix socket and the alert monitor |
+| `orbisd` | **16.7 MiB** | 24.4 MiB | always on; owns the Unix socket and the alert monitor |
 | `orbis-web` | **15.6 MiB** | 23.3 MiB | only while someone uses the dashboard |
 | `orbis-ai-launch` | 0 while serving | — | exec()s llama-server; no resident Python |
 

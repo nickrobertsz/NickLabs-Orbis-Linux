@@ -6,7 +6,7 @@ One Linux installation for the PlayStation 4, with three personalities you can s
 - **GAMING** — a controller-first session (Steam Big Picture / ES-DE) for games that actually run.
 - **AI** — a headless llama.cpp server on your LAN. It runs on the CPU by default; Vulkan offload is admitted only after it proves itself on your exact stack.
 
-> **Status: 0.1.0 source handoff — not hardware-qualified.** Everything here builds and is tested on an x86 host. Nothing has been booted on a PS4 by Orbis yet. See [docs/RELEASE-STATUS.md](docs/RELEASE-STATUS.md) for exactly what runs, what only compiles, and what is untested.
+> **Status: 0.1.0 source handoff — not hardware-qualified.** The platform layer, GPU probe, inference harness and kernel are built and tested on an x86 host. The package, rootfs and image recipes are written but not yet executed end to end. Nothing has been booted on a PS4 by Orbis yet. See [docs/RELEASE-STATUS.md](docs/RELEASE-STATUS.md) for exactly what runs, what only compiles, and what is untested.
 
 ![Orbis dashboard](docs/img/dashboard-overview.png)
 

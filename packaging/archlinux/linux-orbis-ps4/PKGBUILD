@@ -20,10 +20,10 @@ build() {
 package() {
   local rel
   rel="$(python -c "import json; print(json.load(open('$srcdir/out/build-manifest.json'))['kernel_release'])")"
-  install -d "$pkgdir/usr/lib/modules"
-  tar -C "$pkgdir" -xf "$srcdir/out/modules-$rel.tar" --strip-components=1 ./lib 2>/dev/null \
-    || tar -C "$pkgdir/usr" -xf "$srcdir/out/modules-$rel.tar" ./lib
-  if [ -d "$pkgdir/lib/modules" ]; then mv "$pkgdir/lib/modules/$rel" "$pkgdir/usr/lib/modules/"; rm -rf "$pkgdir/lib"; fi
+  rm -rf "$srcdir/mods" && mkdir -p "$srcdir/mods" "$pkgdir/usr/lib/modules"
+  tar -C "$srcdir/mods" -xf "$srcdir/out/modules-$rel.tar"
+  # modules_install writes <INSTALL_MOD_PATH>/lib/modules/<rel>; Arch uses /usr/lib.
+  mv "$srcdir/mods/lib/modules/$rel" "$pkgdir/usr/lib/modules/$rel"
   rm -f "$pkgdir/usr/lib/modules/$rel"/{build,source}
   install -Dm644 "$srcdir/out/bzImage" "$pkgdir/usr/lib/modules/$rel/vmlinuz"
   install -Dm644 "$srcdir/out/config" "$pkgdir/usr/lib/modules/$rel/config"

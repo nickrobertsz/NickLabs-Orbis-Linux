@@ -19,3 +19,8 @@ CONFIG_BTRFS_FS=y
 CONFIG_VFAT_FS=y
 CONFIG_USB_UAS=y
 CONFIG_USB_STORAGE=y
+# Full LTO (the feeRnt default) needs ~32 GB RAM to link vmlinux (upstream README) and was
+# OOM-killed on an 8 GB builder. Orbis builds without LTO, the alternative upstream documents.
+CONFIG_LTO_NONE=y
+# CONFIG_LTO_CLANG_FULL is not set
+# CONFIG_LTO_CLANG_THIN is not set

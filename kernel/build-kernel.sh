@@ -51,7 +51,7 @@ make_args=(LLVM=1 -C "$src" -j"$jobs" KCFLAGS="-march=btver2 -mtune=btver2 -O2")
   $(python3 -c "import json; print(' '.join('$here/'+f for f in json.load(open('$manifest'))['config_fragments']))") >/dev/null
 make "${make_args[@]}" olddefconfig >/dev/null
 # Fragments must survive olddefconfig.
-for want in 'CONFIG_EXTRA_FIRMWARE=""' 'CONFIG_IKCONFIG_PROC=y' 'CONFIG_X86_PS4=y'; do
+for want in 'CONFIG_EXTRA_FIRMWARE=""' 'CONFIG_IKCONFIG_PROC=y' 'CONFIG_X86_PS4=y' 'CONFIG_LTO_NONE=y'; do
   grep -qx "$want" "$src/.config" || { echo "config check failed: $want" >&2; exit 5; }
 done
 start=$(date +%s)
