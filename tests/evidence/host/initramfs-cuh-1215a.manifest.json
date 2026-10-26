@@ -1,0 +1,181 @@
+{
+ "schema": 1,
+ "output": {
+  "file": "initramfs-cuh-1215a.cpio.gz",
+  "sha256": "f2c158844f23856a325b541f17ca66865a4175046e9ae7d7e4a5c05d9c080960",
+  "bytes": 10020855,
+  "entries": 73
+ },
+ "profile": {
+  "description": "NickLabs primary console: CUH-1215A, original (fat) CUH-12xx, Belize southbridge, Liverpool GPU, Marvell 88W8897 (Torus 2) Wi-Fi/BT",
+  "hardware_source": "stated by Nick 2026-10-26 (system firmware 13.50, GoldHEN); not yet confirmed from console logs",
+  "kernel_target": "aeolia-belize-6.15",
+  "required_groups": [
+   "liverpool-gpu",
+   "marvell-88w8897"
+  ],
+  "optional_groups": [
+   "marvell-88w8797",
+   "edid"
+  ],
+  "model": "CUH-1215A",
+  "name": "cuh-1215a"
+ },
+ "source": {
+  "repo": "https://github.com/GayCorp/initramfs-ps4",
+  "commit": "c21a72044adf6c13b773c40f16bae2a9cb83523e",
+  "pinned": "c21a72044adf6c13b773c40f16bae2a9cb83523e",
+  "pin_ok": true
+ },
+ "patches": [
+  {
+   "file": "0001-orbis-helpers-to-wait-for-root.patch",
+   "sha256": "419e828e608f4abd4ec298661b0516f821b9cce9f84ec8b390f0922e42bd85bc"
+  },
+  {
+   "file": "0002-orbis-explicit-root-wins-internal-drive-opt-in.patch",
+   "sha256": "b21c701ffb359f2445765d0a5bf0ced4beeda5eeec139b3a9513c089d88d0a67"
+  }
+ ],
+ "overlay": [
+  {
+   "path": "bin/orbis-stage0-report",
+   "sha256": "5a557c65d052dd9c017becf543c7cab433ccfdb5f0a37e2cf434c4445c144701"
+  },
+  {
+   "path": "hooks/pre_newroot_mount/5-orbis-stage0",
+   "sha256": "bec555d65f7a936a441334793955a44639c525c1bf3f3a8be7cc30ee51af212b"
+  }
+ ],
+ "self_check": [
+  "ok   root= set, appears after 3 polls         => fsck /dev/sdb2;mount root=LABEL=ORBIS-ROOT;",
+  "ok   root= set, old psxitarch disk present    => fsck /dev/sdb2;mount root=LABEL=ORBIS-ROOT;",
+  "ok   root= set, never appears                 => EERROR root=LABEL=ORBIS-ROOT did not appear within 30s.;mount root=LABEL=ORBIS-ROOT;",
+  "ok   no root=, psxitarch present (compat)     => wait-psxitarch;OPEN-INTERNAL-DRIVE;hooks-ps4hdd_open;discovery;",
+  "ok   root= + orbis.ps4hdd=1                   => fsck /dev/sdb2;OPEN-INTERNAL-DRIVE;hooks-ps4hdd_open;mount root=LABEL=ORBIS-ROOT;"
+ ],
+ "firmware_source": {
+  "kind": "initramfs",
+  "name": "initramfs.cpio.gz",
+  "sha256": "3f373bd6c469e490eaf4e5cf4d2e8ed77cf7bb91449b6a18da6a6529d479169b"
+ },
+ "firmware": [
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_ce.bin",
+   "bytes": 8832,
+   "sha256": "173ff0d1633fa0e0a22e0b7e92780b4ec9bb0a72346f0c0ccd8ffe899078763a",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_me.bin",
+   "bytes": 17024,
+   "sha256": "ab835c37011af3af2a597f2fd806e155cccb869e2e2171e65c2524dade506056",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_mec.bin",
+   "bytes": 17024,
+   "sha256": "e86d5846f8433bc682b7dbdf2a4563ec1c527e223ca77460ef15294507b9ba32",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_mec2.bin",
+   "bytes": 17024,
+   "sha256": "f3250bc60e0ff24a80830ebda428fc781d641395e5977d84588694d803cd993a",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_pfp.bin",
+   "bytes": 17024,
+   "sha256": "d2b3ce936f184b4fa0fe10fd867c125b5902862377a5343f03c11f76be62343f",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_rlc.bin",
+   "bytes": 6400,
+   "sha256": "8c26efaac42f508042b8db0ed04efe7a2ee5e30ad3ae139f0846fbb3cf85abca",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_sdma.bin",
+   "bytes": 4456,
+   "sha256": "638602157d38a25e584e81710c9c3a36731c52599d92e010b77dd53890dc662a",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_sdma1.bin",
+   "bytes": 4456,
+   "sha256": "8bb8fc3280153dbc9dc545d3ec046fa38361be5acf7e6f956aa0fd57196c84b8",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_uvd.bin",
+   "bytes": 232752,
+   "sha256": "30eed8d680321bdc6213409a4a882442049b2a559eadb9ee2554d53b0cfb96c9",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "liverpool-gpu",
+   "path": "amdgpu/liverpool_vce.bin",
+   "bytes": 101072,
+   "sha256": "fb768657d70c8674c1c48a284e5299ab2877ac2420957ea4b36c75f7f5997869",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)"
+  },
+  {
+   "group": "marvell-88w8897",
+   "path": "mrvl/sd8897_uapsta.bin",
+   "bytes": 609492,
+   "sha256": "b04fee35702d765ca4d84e321ad4cf814b7c8fb9b2aa6784e9154cb06df0cc4a",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "LICENCE.Marvell: binary redistribution permitted for use with Marvell silicon only"
+  },
+  {
+   "group": "marvell-88w8797",
+   "path": "mrvl/sd8797_uapsta.bin",
+   "bytes": 452764,
+   "sha256": "c5b84ce8f70072f9f11173f448d574655ff2506595cb8dc113f6d8110272ad66",
+   "status": "verified",
+   "redistributable": false,
+   "licence": "LICENCE.Marvell: binary redistribution permitted for use with Marvell silicon only"
+  }
+ ],
+ "skipped_optional_groups": [
+  {
+   "group": "edid",
+   "reason": "not present in firmware source"
+  }
+ ],
+ "redistributable": false,
+ "redistribution_note": "contains firmware without established redistribution rights: keep this initramfs private and never place it in a release archive",
+ "loader_note": "ps4-linux-loader@d0f4d4c (ps4-kexec-common/firmware.c) extracts 8 of these files (pfp, me, ce, mec, mec2, rlc, sdma, sdma1) from the running console at kexec time and places its cpio BEFORE the operator initramfs; files with the same path in the initramfs replace the extracted ones. liverpool_uvd.bin and liverpool_vce.bin are NOT extracted by the loader: hardware video decode/encode needs them in the initramfs."
+}

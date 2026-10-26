@@ -1,0 +1,55 @@
+{
+ "schema": 1,
+ "output": {
+  "file": "initramfs-firmware-free.cpio.gz",
+  "sha256": "a614e9c7811017c107237154b57631e1d212d67919e6c22239fcdf86409c3119",
+  "bytes": 8990889,
+  "entries": 59
+ },
+ "profile": {
+  "description": "Redistributable initramfs with no firmware at all. On ps4-linux-loader >= v24b the 8 core GPU microcode files and the EDID are extracted from the console at boot; hardware video decode/encode (UVD/VCE) and Wi-Fi/BT stay unavailable until firmware is installed.",
+  "kernel_target": "aeolia-belize-6.15",
+  "required_groups": [],
+  "optional_groups": [],
+  "name": "firmware-free"
+ },
+ "source": {
+  "repo": "https://github.com/GayCorp/initramfs-ps4",
+  "commit": "c21a72044adf6c13b773c40f16bae2a9cb83523e",
+  "pinned": "c21a72044adf6c13b773c40f16bae2a9cb83523e",
+  "pin_ok": true
+ },
+ "patches": [
+  {
+   "file": "0001-orbis-helpers-to-wait-for-root.patch",
+   "sha256": "419e828e608f4abd4ec298661b0516f821b9cce9f84ec8b390f0922e42bd85bc"
+  },
+  {
+   "file": "0002-orbis-explicit-root-wins-internal-drive-opt-in.patch",
+   "sha256": "b21c701ffb359f2445765d0a5bf0ced4beeda5eeec139b3a9513c089d88d0a67"
+  }
+ ],
+ "overlay": [
+  {
+   "path": "bin/orbis-stage0-report",
+   "sha256": "5a557c65d052dd9c017becf543c7cab433ccfdb5f0a37e2cf434c4445c144701"
+  },
+  {
+   "path": "hooks/pre_newroot_mount/5-orbis-stage0",
+   "sha256": "bec555d65f7a936a441334793955a44639c525c1bf3f3a8be7cc30ee51af212b"
+  }
+ ],
+ "self_check": [
+  "ok   root= set, appears after 3 polls         => fsck /dev/sdb2;mount root=LABEL=ORBIS-ROOT;",
+  "ok   root= set, old psxitarch disk present    => fsck /dev/sdb2;mount root=LABEL=ORBIS-ROOT;",
+  "ok   root= set, never appears                 => EERROR root=LABEL=ORBIS-ROOT did not appear within 30s.;mount root=LABEL=ORBIS-ROOT;",
+  "ok   no root=, psxitarch present (compat)     => wait-psxitarch;OPEN-INTERNAL-DRIVE;hooks-ps4hdd_open;discovery;",
+  "ok   root= + orbis.ps4hdd=1                   => fsck /dev/sdb2;OPEN-INTERNAL-DRIVE;hooks-ps4hdd_open;mount root=LABEL=ORBIS-ROOT;"
+ ],
+ "firmware_source": null,
+ "firmware": [],
+ "skipped_optional_groups": [],
+ "redistributable": true,
+ "redistribution_note": "all included firmware is marked redistributable in manifests/firmware.json",
+ "loader_note": "ps4-linux-loader@d0f4d4c (ps4-kexec-common/firmware.c) extracts 8 of these files (pfp, me, ce, mec, mec2, rlc, sdma, sdma1) from the running console at kexec time and places its cpio BEFORE the operator initramfs; files with the same path in the initramfs replace the extracted ones. liverpool_uvd.bin and liverpool_vce.bin are NOT extracted by the loader: hardware video decode/encode needs them in the initramfs."
+}

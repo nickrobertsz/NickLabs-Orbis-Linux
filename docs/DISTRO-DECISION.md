@@ -1,6 +1,8 @@
 # Distro Decision Record — NickLabs PS4 Orbis Linux v1
 
-**Date:** 2026-10-23  **Status:** decided for v1, revisit at v2  **Owner:** Nick (NickLabs)
+**Date:** 2026-10-23 (reconfirmed 2026-10-26)  **Status:** decided for v1, revisit at v2  **Owner:** Nick (NickLabs)
+
+> 2026-10-26: Nobara Linux is the NickLabs **build and flashing machine** (`docs/INSTALL-NOBARA.md`). It runs the Arch build container with Podman. That changes nothing about the console's OS, which stays pinned Arch for the reasons below.
 
 ## Decision
 

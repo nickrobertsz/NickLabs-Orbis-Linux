@@ -3,6 +3,11 @@
 #
 #   packaging/rootfs/build-rootfs.sh --snapshot 2026/10/20 --repo out/repo --out out/rootfs \
 #       [--model CUH-1215A] [--internet-allowed] [--keys out/keys] [--plan]
+#       [--authorized-key ~/.ssh/id_ed25519.pub] [--password-hash '$6$...']
+#
+# Login: the 'orbis' user (wheel) gets the SSH public key and/or the password hash given
+# here (the password must be changed at first login). Without either, the account has no
+# usable credentials and the build refuses (use --no-login to build such an image anyway).
 #
 # Runs as root inside the Arch Linux build container (packaging/Containerfile) because it
 # uses pacstrap. Every Arch package comes from ONE Arch Linux Archive snapshot date, so the
@@ -21,7 +26,7 @@
 #   out/rootfs/packages.txt              exact name+version list (SBOM input)
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
-snapshot=""; repo=""; out=""; plan=0; model=""; lan_only=1; keys=""
+snapshot=""; repo=""; out=""; plan=0; model=""; lan_only=1; keys=""; authkey=""; pwhash=""; nologin=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --snapshot) snapshot="$2"; shift 2 ;;
@@ -30,12 +35,20 @@ while [ $# -gt 0 ]; do
     --model) model="$2"; shift 2 ;;
     --internet-allowed) lan_only=0; shift ;;
     --keys) keys="$(realpath "$2")"; shift 2 ;;
+    --authorized-key) authkey="$(realpath "$2")"; shift 2 ;;
+    --password-hash) pwhash="$2"; shift 2 ;;
+    --no-login) nologin=1; shift ;;
     --plan) plan=1; shift ;;
     *) echo "unknown arg $1" >&2; exit 2 ;;
   esac
 done
 [ -n "$snapshot" ] && [ -n "$repo" ] && [ -n "$out" ] || { echo "need --snapshot --repo --out" >&2; exit 2; }
 [ -n "$keys" ] || keys="$(dirname "$repo")/keys"
+if [ -z "$authkey" ] && [ -z "$pwhash" ] && [ "$nologin" = 0 ] && [ "$plan" = 0 ]; then
+  echo "no login credentials: give --authorized-key FILE and/or --password-hash HASH (or --no-login)" >&2; exit 2
+fi
+if [ -n "$pwhash" ]; then case "$pwhash" in '$6$'*|'$y$'*) ;; *) echo "--password-hash must be a sha512-crypt (\$6\$) or yescrypt (\$y\$) hash" >&2; exit 2 ;; esac; fi
+if [ -n "$authkey" ]; then grep -qE '^(ssh-(ed25519|rsa)|ecdsa-sha2-nistp(256|384|521)) ' "$authkey" || { echo "$authkey is not an SSH public key" >&2; exit 2; }; fi
 signed=0; fpr=""
 if [ -f "$keys/orbis-repo-key.asc" ] && [ -f "$keys/orbis-repo-key.fingerprint" ] && [ -f "$repo/orbis.db.tar.zst.sig" ]; then
   signed=1; fpr="$(cat "$keys/orbis-repo-key.fingerprint")"
@@ -68,6 +81,7 @@ if [ "$plan" = 1 ]; then echo "$pkgs"; echo "--- pacman.conf"; cat "$conf"; exit
 if [ "$signed" = 1 ]; then
   pacman-key --add "$keys/orbis-repo-key.asc" && pacman-key --lsign-key "$fpr"
 fi
+out="$(realpath -m "$out")"
 root="$out/dir"
 if [ -e "$root" ]; then rm -rf --one-file-system "${root:?}"; fi
 mkdir -p "$root"
@@ -110,7 +124,10 @@ echo pc > /etc/orbis/default-mode
 ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 locale-gen
 useradd -m -G wheel,orbis-admin,video,render,input -s /bin/bash orbis
-passwd -l orbis   # operator sets a password / SSH key on first boot (docs/INSTALL-NOBARA.md)
+usermod -p '*' orbis          # no password login until one is set below or by the operator
+echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/10-orbis-wheel
+echo 'orbis ALL=(root) NOPASSWD: /usr/bin/passwd orbis' > /etc/sudoers.d/11-orbis-set-password
+chmod 440 /etc/sudoers.d/10-orbis-wheel /etc/sudoers.d/11-orbis-set-password
 if [ "$signed" = 1 ]; then
   pacman-key --init
   pacman-key --populate archlinux
@@ -118,6 +135,15 @@ if [ "$signed" = 1 ]; then
   pacman-key --lsign-key "$fpr"
 fi
 CH
+if [ -n "$authkey" ]; then
+  install -d -m700 -o 1000 -g 1000 "$root/home/orbis/.ssh"
+  install -m600 -o 1000 -g 1000 "$authkey" "$root/home/orbis/.ssh/authorized_keys"
+  arch-chroot "$root" chown -R orbis:orbis /home/orbis/.ssh
+fi
+if [ -n "$pwhash" ]; then
+  arch-chroot "$root" usermod -p "$pwhash" orbis
+  arch-chroot "$root" chage -d 0 orbis   # must change it at first login
+fi
 arch-chroot "$root" pacman -Q > "$root/usr/share/orbis/packages.txt"
 mkdir -p "$out"
 cp "$root/usr/share/orbis/packages.txt" "$out/packages.txt"

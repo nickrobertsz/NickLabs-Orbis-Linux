@@ -9,12 +9,30 @@ Scope: the kernel display path, Mesa (radeonsi/RADV), Vulkan compute, and the PS
 | Layer | Orbis choice | Pin |
 |---|---|---|
 | Kernel display / amdgpu + `ps4_bridge` | feeRnt crashnt-4.7, plus Orbis patch 0001 (1080p60 only) | `108ef97` |
-| Firmware (Liverpool CP/ME/MEC/PFP/RLC/SDMA) | operator-supplied in the initramfs, hash-checked | `manifests/firmware.json` |
+| Firmware (Liverpool CE/ME/MEC/MEC2/PFP/RLC/SDMA×2/UVD/VCE) | in the initramfs per hardware profile, from a verified community initramfs, hash-checked; the loader also extracts 8 of them from the console (see below) | `manifests/firmware.json`, `manifests/initramfs-profiles.json` |
 | Mesa radeonsi (GL) + RADV (Vulkan) | 26.2.5 + linux-psx 0001/0003/0005 | `ddaf85e3`, archive sha256 `794b3d…a0a5` |
 | 32-bit Mesa | same source, patches and version (`lib32-mesa-orbis-ps4`) | same |
 | X driver | xf86-video-amdgpu 25.0.0 + 64 px cursor | tag |
 | libdrm | Arch stock (snapshot) | — |
 | Video decode/encode | software only (`-D video-codecs=`, VA off) | — |
+
+**How firmware reaches amdgpu (ps4-linux-loader@d0f4d4c, read 2026-10-26).**
+
+1. At kexec time, the loader builds a small cpio and places it **before** the operator's initramfs. It contains:
+   - `key/eap_hdd_key.bin`;
+   - `lib/firmware/edid/my_edid.bin` (the EDID of the attached TV);
+   - `lib/firmware/amdgpu/liverpool_{pfp,me,ce,mec,mec2,rlc,sdma,sdma1}.bin`, extracted from the running PS4 system software, or `gladius_*` on a Pro.
+2. The kernel unpacks both archives in order. A file with the same path in the later (Orbis) archive replaces the loader's copy.
+3. amdgpu is built in, so it requests firmware from this merged initramfs before the root is mounted.
+
+Consequences:
+
+- The `cuh-1215a` profile keeps Orbis' verified copies authoritative, with known hashes and the same bytes on every boot.
+- `liverpool_uvd.bin` and `liverpool_vce.bin` only exist when the initramfs carries them.
+- A `firmware-free` initramfs still gets the 8 core microcode files and an EDID from the loader. It gets no UVD/VCE and no Wi-Fi/BT.
+- The loader's EDID is what `initramfs-ps4`'s `0-persist-edid` hook copies into the root. Orbis does not pass `drm.edid_firmware=`, because kernel patch 0001 fixes 1080p60.
+
+The stage-0 report (`orbis.stage0=1`) records the SHA-256 of every firmware file in the running initramfs, plus the loader EDID, so this can be confirmed on hardware.
 
 ## 2. Capability tiers and how each is measured
 

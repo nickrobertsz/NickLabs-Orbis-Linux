@@ -33,7 +33,7 @@ Machine-readable source: [`manifests/capability-matrix.json`](../manifests/capab
 
 The HDMI transmitter also differs: MN86471A on CUH-11xx and MN864729 on CUH-12xx and later (aday1). Wi-Fi/BT chips vary even within a model: Marvell 88W8797 "Torus 1", Marvell 88W8897 "Torus 2" (CUH-1215/1216), or MediaTek MT7668.
 
-## Matrix (static evidence, 2026-10-23)
+## Matrix (static evidence, 2026-10-26)
 
 | Capability | fat-aeolia | fat-belize | slim-belize | slim-baikal | pro-belize | pro-baikal | Orbis policy |
 |---|---|---|---|---|---|---|---|
@@ -50,7 +50,7 @@ The HDMI transmitter also differs: MN86471A on CUH-11xx and MN864729 on CUH-12xx
 | UVD decode / VCE encode | UNVERIFIED | UNVERIFIED | UNVERIFIED | UNVERIFIED (experimental) | UNVERIFIED | UNVERIFIED | **UNSUPPORTED** in v1 (software decode) |
 | HDMI audio | UNVERIFIED | UNVERIFIED | UNVERIFIED | UPSTREAM (44.1 kHz only) | UNVERIFIED | UNVERIFIED | — |
 | Ethernet | UNVERIFIED | UNVERIFIED | UNVERIFIED | UPSTREAM (`psx0`, experimental) | UNVERIFIED | UNVERIFIED ("may not work") | NetworkManager manages `psx0` |
-| Wi-Fi | chip-dependent | UPSTREAM (Marvell Torus 2) | UNVERIFIED | UNVERIFIED (firmware absent) | UNVERIFIED | UNVERIFIED | firmware operator-supplied |
+| Wi-Fi | chip-dependent | UPSTREAM (Marvell Torus 2) | UNVERIFIED | UNVERIFIED (firmware absent) | UNVERIFIED | UNVERIFIED | firmware from a verified source in the initramfs (profile); LAN only by default |
 | DS4 pairing survives reboot | UNSUPPORTED | UNSUPPORTED | UNSUPPORTED | UNSUPPORTED | UNSUPPORTED | UNSUPPORTED | USB always works |
 | Temperature (k10temp) | UNVERIFIED | UNVERIFIED | UNVERIFIED | UPSTREAM (6.18) | UNVERIFIED | UNVERIFIED | shown only when exposed |
 | Fan read/control | UNVERIFIED | UNVERIFIED | UNVERIFIED | UNVERIFIED | UNVERIFIED | UNVERIFIED | **UNSUPPORTED** (not exposed; southbridge firmware manages the fan) |
@@ -61,12 +61,29 @@ The HDMI transmitter also differs: MN86471A on CUH-11xx and MN864729 on CUH-12xx
 
 Sources: `aday1/ps4-hdmi-blackscreen@5c1c2fc`, `feeRnt/ps4-linux-12xx` README, `meerzulee/linux-psx@2138063` README/STATUS/MESA-TESTING, and `DionKill/ps4-linux-tutorial@82b5249` (setup, issues, information).
 
+## NickLabs consoles (stated by Nick, 2026-10-26)
+
+| | Primary | Secondary |
+|---|---|---|
+| Model | **CUH-1215A** (original "fat", CUH-12xx) | CUH-2215B (Slim) |
+| Southbridge / GPU | Belize / Liverpool | Baikal / Liverpool |
+| Wi-Fi/BT | Marvell 88W8897 "Torus 2" | not stated |
+| System firmware | 13.50, GoldHEN (BinLoader, FTP) | 13.50 |
+| Group | `fat-belize` | `slim-baikal` |
+| Orbis target | kernel `aeolia-belize-6.15`, initramfs profile `cuh-1215a` | `baikal-7.2` (not built yet; qualify the fat first) |
+| Network rule | LAN only, no public internet | same |
+| State | **UNVERIFIED**: stage-0 and full images built, never booted | UNVERIFIED |
+
+These facts are Nick's statements. The stage-0 report (`orbis.stage0=1`) confirms them from the console itself: southbridge line, PCI IDs, the `mwifiex_sdio` firmware request and the HDMI connector. Until then this matrix says "stated", not "verified".
+
+Firmware for the CUH-1215A image: the 10 Liverpool files (hashes unchanged, now also seen byte-identical in the X-F1REBALL-X v1.0 initramfs) and `mrvl/sd8897_uapsta.bin` (b04fee35…, required by the profile). `mrvl/sd8797_uapsta.bin` is included as optional, in case the chip differs. On current loaders, the 8 core GPU microcode files and the EDID are also extracted from the console at boot (see GRAPHICS-REPORT §1).
+
 ## Known unknowns that change the build target
 
-1. **Nick's exact CUH model and southbridge.** The v1 default is a fat console with Aeolia or Belize (`aeolia-belize-6.15` kernel). Baikal uses the `baikal-7.2` target instead.
-2. **The Wi-Fi/BT chip on Nick's console.** It decides which firmware group the initramfs needs.
-3. **Firmware revision.** The Liverpool firmware hashes in `manifests/firmware.json` were recorded from one Baikal console. A different set is reported as a mismatch, never silently accepted.
+1. **Confirmation of the stated hardware** from the stage-0 report, above all the Wi-Fi chip: CUH-12xx consoles exist with 88W8797 and 88W8897.
+2. **Firmware revision.** A different Liverpool set is reported as a mismatch and is never silently accepted.
+3. **Whether GoldHEN's BinLoader accepts the community `.elf` payload** on this console, or needs the `.bin` built from source (`make loader-payload`).
 
 ## Test scope for a hardware qualification receipt
 
-Run `tests/hardware/qualify.sh` on the console. It writes a JSON receipt: identity, kernel, Mesa, every `orbis doctor --deep` tier, mode round-trip timings and memory deltas, and the HDMI modeset/TTY transition result. A group moves to `VERIFIED` only with such a receipt committed for the exact Orbis release.
+Boot the stage-0 image first (`orbis-logs/` on the USB disk), then run `sudo orbis-qualify` (= `tests/hardware/qualify.sh`) on the full system. It writes a JSON receipt: identity, kernel, Mesa, every `orbis doctor --deep` tier, mode round-trip timings and memory deltas, and the HDMI modeset/TTY transition result. A group moves to `VERIFIED` only with such a receipt committed for the exact Orbis release.

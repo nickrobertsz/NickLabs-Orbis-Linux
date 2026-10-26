@@ -1,21 +1,29 @@
 # Orbis Architecture
 
 ```text
- PS4 system software ──(GoldHEN payload: ps4-linux-loader)──► reads USB FAT "ORBIS-BOOT":
-                                                               bzImage · initramfs.cpio.gz · bootargs.txt · vram.txt
+ PS4 system software (FW 13.50) ──(GoldHEN BinLoader :9090 ← send_payload.py: ps4-linux-loader)──►
+   reads, per file (usb0 → usb1 → /data/linux/boot → /user/system/boot), from USB FAT "ORBIS-BOOT":
+   bzImage · initramfs.cpio.gz · bootargs.txt (line 1) · vram.txt
    │ kexec, E820 carve-out = vram.txt, hardware_subarch = PS4
+   │ initrd = [loader cpio: HDD key, TV EDID, 8 GPU microcode files from the console] + [Orbis initramfs]
    ▼
- linux-orbis-ps4 (feeRnt 6.15.4 crashnt-4.7 + Orbis patches, firmware-free)
+ linux-orbis-ps4 (feeRnt 6.15.4 crashnt-4.7 + Orbis patch 0001, firmware-free, no LTO)
+   │ amdgpu / mwifiex / btmrvl built in → firmware from the merged initramfs
    ▼
- Orbis initramfs (initramfs-ps4 source, pinned; Liverpool firmware supplied by the operator)
-   │ root=LABEL=ORBIS-ROOT
+ Orbis initramfs (initramfs-ps4 @c21a720 + Orbis patches; firmware per profile, verified)
+   │ orbis.stage0=1 → hardware report to ORBIS-BOOT/orbis-logs/, rescue shell
+   │ root=LABEL=ORBIS-ROOT wins (wait 30 s + fsck); internal PS4 drive only with orbis.ps4hdd=1
    ▼
- systemd ── orbis-mode-generator: default.target := orbis-<mode>.target
+ systemd ── orbis-lan-only.service (nftables, before network-pre): LAN only
+   │       orbis-mode-generator: default.target := orbis-<mode>.target
    │           (precedence: systemd.unit= > orbis.mode= > /var/lib/orbis/desired-mode > /etc/orbis/default-mode > pc)
    ├─ multi-user.target  (shared): NetworkManager · sshd · journald · zram · orbisd · orbis-web.socket
    ├─ orbis-pc.target     → graphical.target → LightDM/Xorg/XFCE
-   ├─ orbis-gaming.target → orbis-gaming-session (tty1: Xorg + Steam BPM / ES-DE / Kodi)
+   ├─ orbis-gaming.target → orbis-gaming-session (tty1: Xorg + Kodi on LAN-only images / Steam BPM / ES-DE)
    └─ orbis-ai.target     → orbis-llama.service (orbis-ai-launch → exec llama-server)
+
+ pacman: [orbis] = file:///var/lib/orbis/repo (inside the image; optional local signing key)
+         updates: orbis-update --orbis-only --from http://<build machine>:8780/
 ```
 
 ## Components
@@ -30,8 +38,11 @@
 | `orbis-mode-generator` | POSIX sh | systemd generator | pick the boot personality | runs before most of userspace |
 | `orbis-ai-launch` | Python → exec | `orbis-ai` user | compute safe llama.cpp limits from measured state, then exec | zero resident overhead |
 | `orbis-pkg-guard` | Python | pacman hook | protect the PS4 graphics/kernel stack | — |
-| `build_initramfs.py` | Python | root at install | reproducible newc initramfs, operator firmware with hash checks | no cpio dependency; deterministic |
-| `make_usb_image.py` | Python | builder | MBR + FAT32 + ext4 image without loop mounts; guarded device writer | — |
+| `build_initramfs.py` | Python | builder / root at install | reproducible newc initramfs: pinned source + patches + self-check + overlay; firmware per hardware profile with hash checks; build manifest | no cpio dependency; deterministic |
+| `make_usb_image.py` + `fat32.py` | Python | builder | MBR + FAT32 (built-in LFN writer, read-back, fsck) + ext4 image without loop mounts; stage-0 images; guarded device writer | deterministic, no mtools |
+| `release.sh` | bash | builder (sudo for the container) | one-command release on Nobara: references → initramfs → stage-0 → packages → rootfs → image → checksums | — |
+| `netpolicy.py` + `orbis-lan-only.service` | Python / nftables | root | LAN-only egress/ingress policy and its doctor check | kernel nftables built in |
+| `orbis-stage0-report` | busybox sh | initramfs | hardware report to the USB FAT partition before any root exists | runs where nothing else does |
 
 **Language choice:** Rust was considered for orbisd. It would save roughly 10–12 MiB of RSS. It was not chosen for v1 because the platform logic is mostly orchestration and parsing, where Python's iteration speed and readability for contributors matter more. The C probe is the only component where a crash, hang or missing library must not take the caller down.
 

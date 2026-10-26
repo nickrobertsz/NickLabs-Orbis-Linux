@@ -1,93 +1,101 @@
-# Release Status — 0.1.0 (2026-10-23)
+# Release Status — 0.2.0 (2026-10-26)
 
 **Bottom line:**
-- Orbis has **not** been booted on a PlayStation 4.
-- The platform layer, GPU probe, inference harness and kernel were built and exercised on an x86-64 build host (Ubuntu 24.04 container, 2 vCPU, no GPU).
-- The package, rootfs and image recipes are written but **not executed end to end**. The build environment could not reach Arch, Fedora or Mesa mirrors.
+
+- **Not booted on a PS4.** Orbis has never been run on the target console (CUH-1215A, FW 13.50, GoldHEN). Every hardware-dependent capability is **UNVERIFIED**.
+- **Ready to flash now:** a **stage-0 image** for the CUH-1215A. It contains the Orbis kernel, the Orbis initramfs and the verified firmware. It was built and checked on the Orbis build host (deterministic, fsck clean, byte-for-byte read-back).
+- **Full image: built on Nobara.** The installable PC · GAMING · AI image comes from **one command on Nobara** (`packaging/release.sh`). Its package, rootfs and full-image steps are written and syntax-checked, but not executed here: this build environment still cannot reach Arch mirrors, Docker Hub or freedesktop.org. Those steps are the first thing to run on Nobara.
 
 **Legend:**
-- **RUNS (host)**: executed and tested on the build host.
-- **COMPILED**: builds; not executed in a meaningful way.
-- **WRITTEN**: recipe or script exists and is syntax-checked; not executed.
-- **PS4-UNTESTED**: no PS4 evidence from Orbis.
-- **OPERATOR**: needs Nick's action or input.
 
-## Platform layer
-
-| Component | Status | Evidence |
-|---|---|---|
-| Mode engine (plan/execute, fast/reboot/noop/blocked, residue + GPU-client verification, readiness, memory deltas, transition log) | RUNS (host) · PS4-UNTESTED | 14 engine tests on an in-memory systemd model, including a PC→GAMING→AI→PC round trip; real systemd never driven |
-| Boot partition adapter (vram.txt semantics mirrored from the loader, bootargs editing, kernel pair install/rollback) | RUNS (host) | 8 tests on fixture FAT directories |
-| Boot-protocol / loader-contract checker | RUNS (host) | synthetic headers, plus the real feeRnt `v6.15.4__crashnt-4.7` `bzImage_GCC-11` (sha256 `d8ade1fb…7e37`): protocol 2.15, XLF 0x0023, `CONFIG_X86_PS4=y`, embedded-firmware warning (`tests/evidence/host/bzimage-check-*.json`) |
-| Mode generator (systemd, POSIX sh) | RUNS (host) | precedence test with a fake root; never run as a real systemd generator |
-| orbisd API v1 + orbis-web dashboard | RUNS (host) | 7 integration tests over real sockets: auth, CSRF, CSP, path traversal, switch round trip. Headless-Chromium screenshots in `docs/img/`. Measured idle PSS: orbisd 16.7 MiB, orbis-web 15.6 MiB |
-| AI launcher → llama-server → dashboard chat | RUNS (host) | `tests/evidence/host/ai-launch-e2e.md` (tiny random model, CPU) |
-| Capability matrix, hardware inventory, doctor | RUNS (host) | fixture PS4 sysfs/procfs; the real host is correctly "not a PS4" |
-| ISA audit | RUNS (host) | flags a `-march=x86-64-v3` binary as unsafe; btver2/baseline safe; Mesa binary `safe-if-dispatched`; Orbis llama.cpp builds (CPU and Vulkan) contain **no** AVX2/FMA/BMI2 (`tests/evidence/host/isa-audit.json`) |
-| Package guard (pacman hooks) | RUNS (host) as unit | evaluate + single-use override; hooks never run inside pacman |
-| systemd units, logind/sleep/sysusers/tmpfiles, Xorg conf | WRITTEN | not loaded by systemd; `systemd-analyze verify` not available on host |
-
-## Tools
-
-| Component | Status | Evidence |
-|---|---|---|
-| `orbis-gpu-probe` (C) | COMPILED + RUNS (host) | GL: llvmpipe identified, classified **software**, draw test pixel-exact. Vulkan: SwiftShader, 15/15 compute tests pass and the tier stays UNVERIFIED (software device). Never run on RADV/Liverpool. |
-| `orbis-infer-harness` | RUNS (host) | 6 unit tests. Self-test campaigns with fault-injecting stand-ins: pass / page fault / numeric / hang / power-loss resume. Boundaries found and classified correctly (`tests/evidence/host/harness-*`). Real llama.cpp Vulkan on SwiftShader correctly stopped at preflight with `UNSUPPORTED_DEVICE` (no 16-bit storage). **Never run on a PS4 GPU.** |
-| `make_tiny_model.py` | RUNS (host) | GGUF loads in llama.cpp b11845 |
-| llama.cpp b11845 with Orbis Jaguar flags | COMPILED (host), CPU build RUNS | CPU and Vulkan builds; ISA audit clean |
-
-## Kernel
-
-| Item | Status | Evidence |
-|---|---|---|
-| Orbis patch 0001 (1080p60 only) | applies (`git apply --check`) + COMPILED (`ps4_bridge.o`, no warnings) | `/home/claude/tools/logs/kernel.log` in the build session |
-| Full `aeolia-belize-6.15` build via `kernel/build-kernel.sh` | **COMPILED** (no LTO) · loader-contract check ok · firmware-free | "Kernel build result" below |
-| Boot on PS4 | PS4-UNTESTED | — |
-| Baikal target | WRITTEN (delegated to Linux psX) | — |
-
-## Graphics
-
-| Item | Status |
+| Label | Meaning |
 |---|---|
-| Mesa 26.2.5 + patches 0001/0003/0005 | patches **apply in sequence** to the 26.2.5 AMD sources; **Mesa not compiled**; PKGBUILD meson options validated against 26.2.5 `meson.options` |
-| lib32 Mesa, xf86-video-amdgpu | WRITTEN |
-| Display fixes on hardware | PS4-UNTESTED |
+| **RUNS (host)** | executed and tested on the x86-64 build host (Ubuntu 24.04 container, 2 vCPU, no GPU) |
+| **BUILT** | the artifact was produced here and checked |
+| **COMPILED** | builds; not executed meaningfully |
+| **WRITTEN** | syntax-checked; not executed |
+| **PS4-UNTESTED** | no Orbis evidence from a console |
 
-## Packaging
+## What changed since 0.1.0
 
-| Item | Status | Evidence |
+| Area | Status | Evidence |
 |---|---|---|
-| PKGBUILDs (orbis-platform, llama-cpp-orbis, linux-orbis-ps4, Mesa ×2, xf86) | WRITTEN | not run through makepkg |
-| Build container, `build-packages.sh`, rootfs builder | WRITTEN (`bash -n`) | Arch mirrors and Docker Hub unreachable from the build environment |
-| Initramfs builder | RUNS (host) | deterministic round-trip identical; refuses missing or mismatching firmware; never fed real Liverpool firmware |
-| USB image builder | partially RUNS | MBR + FAT32 (`mkfs.fat --offset`) + ext4 with files (`mke2fs -d`) verified. **FAT file copy (`mcopy`) not exercised**: mtools unavailable on the host. The device writer correctly refused `/dev/vda` (mounted, not removable). |
-| Overlay install/update/uninstall scripts | WRITTEN (`bash -n`) | — |
-| SBOM, deterministic source tarball | RUNS (host) | — |
+| Community references (X-F1REBALL-X v1.0: initramfs, 1024 MB payload, Belize 7.1.7 kernel) | **RUNS (host)**: downloaded; SHA-256 equal to Nick's values | `manifests/references.json`, `tests/evidence/host/references-and-loader-2026-10-26.md` |
+| Firmware in that initramfs | **verified**: 10/10 Liverpool hashes equal `manifests/firmware.json`; Marvell 8897/8797 recorded, and equal to feeRnt/ps4-linux-initramfs; no EDID | same |
+| initramfs builder: profiles, required/optional groups, provenance manifest, no `--allow-missing` | **RUNS (host)** · 17 tests | `tests/unit/test_initramfs.py` |
+| Orbis patches to initramfs-ps4@c21a720 (explicit `root=` wins, root wait + fsck, internal drive opt-in) | **RUNS (host)**: self-check of the real patched `init`/`functions.sh` with stubbed devices, 5/5 cases; gates every build | build manifest `self_check` |
+| Stage-0 report overlay (busybox sh) | **RUNS (host)** with stubs (report sections, no-partition path) · PS4-UNTESTED | — |
+| CUH-1215A initramfs | **BUILT**: 73 entries, sha256 `f2c15884…0960`. Identical from a fresh clone and from a `.git`-less packaged tree. **Private** (firmware) | `tests/evidence/host/initramfs-cuh-1215a.manifest.json` |
+| Firmware-free initramfs | **BUILT**: sha256 `a614e9c7…3119`, redistributable | `initramfs-firmware-free.manifest.json` |
+| Built-in FAT32 writer (replaces the mtools requirement) | **RUNS (host)** · 6 tests: long names, root-directory growth, duplicates, full disk, determinism; `fsck.fat` clean | `tests/unit/test_image.py` |
+| Stage-0 USB image, CUH-1215A | **BUILT**: 1 GiB, xz 22.5 MB; FAT read-back OK; `fsck.fat` clean; `e2fsck` clean; bit-identical on rebuild. **Private** | `tests/evidence/host/stage0-image-cuh-1215a.json` |
+| `release.sh --stage0-only` end to end (fetch → verify → clone pinned source → kernel tar check → initramfs ×2 → image) | **RUNS (host)**: 44 s | — |
+| Kernel package reusing the released build (`ORBIS_KERNEL_OUT`): SHA256SUMS + loader check | checks **RUN (host)** on the released tarball; makepkg not run | — |
+| LAN-only nftables policy + `orbis-lan-only.service` + doctor `network.lan_only` | policy logic **RUNS (host)** · 2 tests; ruleset never loaded into a kernel here | `tests/unit/test_platform.py` |
+| Local `[orbis]` repo in the image, signing, LAN serving, `orbis-update --orbis-only` | dry-run path **RUNS (host)** against a sample `pacman.conf`; signing and pacman never run | — |
+| First-boot login (SSH key / password hash, forced change, wheel sudo) | build-time refusals **RUN (host)**; rootfs never built | — |
+| `send_payload.py` (GoldHEN BinLoader :9090, private addresses only) | **RUNS (host)** against a local listener: 320936/320936 bytes, hash equal | — |
+| `verify_firmware_provenance.py` | **RUNS (host)** on a mock rootfs (`.xz` Arch-style file detected as identical) | — |
+| ps4-linux-loader payload from source (`make loader-payload`) | **WRITTEN**: building the external loader was blocked by this session's permission policy; the prebuilt payload is hash-verified instead | — |
+| Packages, rootfs, full image, SBOM via `release.sh` | **WRITTEN** (`bash -n`); needs Nobara + Podman + internet | — |
 
-## Operator actions (Nick)
+## Carried over from 0.1.0 (unchanged)
 
-1. **Tell me the CUH model and southbridge.** This decides the kernel target and the qualification group.
-2. **Supply the firmware:** your current working `initramfs.cpio.gz`, from which Orbis extracts the Liverpool firmware. Also say which Wi-Fi/BT chip you have, if known.
-3. Run `make packages rootfs initramfs image` on a machine with Docker and internet, or let CI do it. Then flash, boot, and run `tests/hardware/qualify.sh` → receipts.
-4. Host the `[orbis]` package repository: GitHub Pages works, as DionKill does. Replace `packages.nicklabs.invalid` in `packaging/rootfs/overlay/etc/pacman.conf.in` and set up a signing key.
-5. Confirm the licence for Orbis code (MIT is in place) and contact DionKill/centi_07 about the cursor patch's licence.
-6. For AI Vulkan: run an inference campaign on the console with a 0.5B–1.5B model, and a second machine running `orbis-infer-harness receive` to keep kernel logs through hangs.
+| Component | Status |
+|---|---|
+| Mode engine, orbisd API, dashboard, CLI, doctor, capabilities, ISA audit, package guard | RUNS (host) · PS4-UNTESTED |
+| `orbis-gpu-probe`, `orbis-infer-harness` | RUNS (host) on llvmpipe/SwiftShader · never on RADV/Liverpool |
+| llama.cpp b11845 (btver2 flags) | COMPILED; CPU build runs; ISA audit clean |
+| Mesa 26.2.5 + patches 0001/0003/0005 | patches apply; **not compiled** (needs Nobara build) |
+| Kernel `aeolia-belize-6.15` | COMPILED (below) · PS4-UNTESTED |
 
-## Kernel build result
+## Kernel build result (unchanged since 0.1.0)
 
-**COMPILED · PS4-UNTESTED.** Full `kernel/build-kernel.sh --target aeolia-belize-6.15` finished with exit 0 on 2026-10-23 (1813 s, 2 vCPU, Ubuntu clang 18.1.3).
+**COMPILED · PS4-UNTESTED.**
 
 | | |
 |---|---|
-| Base | feeRnt ps4-linux-12xx `v6.15.4_crashnt-4.7__no-built-in-fw`, commit `108ef9764583` |
-| Orbis patches | `0001-drm-amdgpu-ps4_bridge-advertise-only-1080p60.patch` |
-| Release | `6.15.4-orbis-ps4-g108ef9764583-dirty`. "-dirty" only means the Orbis patch is applied on top of the tagged tree. |
-| Loader-contract check | **ok**: protocol 2.15, xloadflags 0x23 (`XLF_KERNEL_64`, can-be-loaded-above-4G, EFI handover), relocatable, xz payload, cmdline_size 2047. No errors or warnings. |
-| Embedded config | `CONFIG_X86_PS4=y`, `CONFIG_EXTRA_FIRMWARE=""` (**no firmware built in**), `CONFIG_LOCALVERSION="-orbis-ps4"` |
+| Base | feeRnt ps4-linux-12xx `v6.15.4_crashnt-4.7__no-built-in-fw`, commit `108ef9764583` + Orbis patch 0001 |
+| Release | `6.15.4-orbis-ps4-g108ef9764583-dirty` ("-dirty" = Orbis patch on top of the tag) |
+| Loader contract | **ok**: protocol 2.15, xloadflags 0x23, relocatable, xz, cmdline_size 2047 |
+| Config | `CONFIG_X86_PS4=y`, `CONFIG_EXTRA_FIRMWARE=""`, `CONFIG_LTO_NONE=y`. Built in: amdgpu, `MWIFIEX_SDIO`, `BT_MRVL_SDIO`, MT76, vfat + NLS 437/8859-1, USB storage/UAS, nf_tables (inet, ct, reject, log, limit) |
 | `bzImage` | 12,456,960 bytes, sha256 `cbc11420cba2ed839a242380361dffe9640b63aea530cb71aacffba46c0ec157` |
-| modules tar | sha256 `31f2843abccf334bf84804c17780ed5d5b088f562fae6e2b5e6a815946cd8401` (3 `.ko`). `depmod` was missing on the host, so `modules.dep` is generated at package install time (the PKGBUILD runs depmod). |
-| Compiler warnings | 116 lines matching `warning:`, all in upstream code; none in `ps4_bridge.c` |
+| modules tar | sha256 `31f2843abccf334bf84804c17780ed5d5b088f562fae6e2b5e6a815946cd8401` |
 
-**LTO:** the first attempt used the upstream config's full Clang LTO and was OOM-killed at the `vmlinux.o` link (exit 137, ~8 GB RAM). Orbis now forces `CONFIG_LTO_NONE=y` in `orbis-common.fragment`, and `build-kernel.sh` verifies it. This costs a little runtime performance but removes a 32 GB-RAM build requirement. The effect on PS4 behaviour is not measured.
+Full Clang LTO OOM-killed the link on an 8 GB host, so Orbis forces `CONFIG_LTO_NONE=y`. The runtime effect on the PS4 is not measured.
 
-**What this does not prove:** that the kernel boots on a PS4, that HDMI comes up at 1080p60, or that amdgpu initialises on Liverpool. All of these wait on `tests/hardware/qualify.sh` on a console.
+## Findings this release acted on
+
+- **BOOT-007 (S1).** initramfs-ps4 discovers a `psxitarch`/internal install **before** honouring `root=`, so an older community install could boot instead of Orbis. Fixed in the Orbis initramfs.
+- **BOOT-008.** The upstream init opens the PS4 internal drive on every boot. Orbis makes that opt-in.
+- **BOOT-009.** The loader looks up each boot file separately (USB, then internal). Orbis images always carry all four files.
+- **FW-001.** The loader prepends a cpio with the HDD key, the TV EDID and 8 GPU microcode files from the console. Orbis files of the same name override it; UVD/VCE come only from the initramfs.
+- **TOOL-003 (S1).** Images had no usable first-boot login. Fixed.
+- **LIC-003.** Marvell blobs are not yet proven identical to linux-firmware. `release.sh` checks them against Arch `linux-firmware-marvell` on Nobara.
+
+## Firmware and redistribution
+
+| Artifact | Contains firmware | May be redistributed |
+|---|---|---|
+| Source tarball, git bundle | no | yes (MIT/GPL per component) |
+| `initramfs-firmware-free`, images built from it | no | yes |
+| `initramfs-cuh-1215a`, the CUH-1215A stage-0 and full images | Liverpool (rights unknown), Marvell (rights pending LIC-003) | **no**: keep private (`redistributable: false` in their manifests) |
+| Kernel build tarball | no (`CONFIG_EXTRA_FIRMWARE=""`) | yes, with the GPL source (pinned commit + patch, in the source tarball) |
+
+## Remaining physical-console qualification
+
+See **[HARDWARE-QUALIFICATION.md](HARDWARE-QUALIFICATION.md)**:
+
+- **Q0:** stage 0 (payload, kernel, HDMI, amdgpu firmware, Wi-Fi chip);
+- **Q1:** full boot, login, doctor, GL/Vulkan, LAN-only, Wi-Fi, time;
+- **Q2:** personalities and switching (`orbis-qualify`), HDMI after each switch, audio, controller, AI on CPU;
+- **Q3:** the GPU inference campaign;
+- **Q4:** recovery paths.
+
+## Operator actions (Nick)
+
+1. **Flash and boot the stage-0 image** (INSTALL-NOBARA §3) and send back `orbis-logs/stage0-001.txt` and `-dmesg.txt`. This confirms the stated hardware and the kernel/firmware path.
+2. **On Nobara, run the full build:** `packaging/release.sh --profile cuh-1215a --kernel-tar … --ssh-key ~/.ssh/id_ed25519.pub --sign`. Send back its output, or the failing step.
+3. **Flash the full image** to a USB 3 SSD, boot it, run `sudo orbis-qualify --model CUH-1215A`, and send back the receipt.
+4. Keep `out/keys/gnupg` backed up if you sign. Never share the CUH-1215A images (firmware).
+5. Still open from 0.1.0: confirm the Orbis code licence (MIT is in place), and ask DionKill/centi_07 about the cursor patch licence.

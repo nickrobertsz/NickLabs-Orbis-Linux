@@ -11,7 +11,9 @@ Orbis is an integration project. Its PS4 support stands on years of community wo
 | **meerzulee** and Linux psX / Omarchy psX contributors | Baikal 7.2 kernel; the Mesa 26.2.5 patch series (0001 port, 0003, 0005) with provenance; dynamic-memory research; firmware manifests and hashes; experiment discipline | `graphics/patches/mesa/`, `manifests/firmware.json`, `kernel/targets/baikal-7.2.json` |
 | **froyo** (author of the DionKill Mesa patch) and **centi_07** (PKGBUILDs) | original Liverpool/Gladius Mesa enablement; xf86-video-amdgpu cursor fix | `graphics/patches/*/provenance.json` |
 | **DionKill** and tutorial contributors — `ps4-linux-tutorial`, `ps4-video-archlinux` | the community knowledge base: issues, payload/VRAM behaviour, distro landscape, package workflow | DISTRO-DECISION, HARDWARE-MATRIX, BUG-LEDGER |
-| **ArabPixel** and `ps4-linux/ps4-linux-loader` contributors | the kexec payload whose file contract Orbis implements (`vram.txt`, `bootargs.txt`) | `platform/orbis/bootfs.py` (no code copied) |
+| **ArabPixel** and `ps4-linux/ps4-linux-loader` contributors | the kexec payload whose file contract Orbis implements (`vram.txt`, `bootargs.txt`, per-file lookup order) and whose firmware extraction supplies console firmware at boot | `platform/orbis/bootfs.py`, `packaging/loader/` (recipe only; no code copied) |
+| **X-F1REBALL-X** — `PS4-Linux` release v1.0 | the verified community initramfs Orbis takes firmware from, the prebuilt 1024 MB payload, and the reference Belize 7.1.7 kernel (all fetched by hash, never redistributed) | `manifests/references.json` |
+| **feeRnt** — `ps4-linux-initramfs` | an independent copy of the Marvell firmware that corroborates the community hashes | `manifests/firmware.json` (`observed_in`) |
 | **GattoDev (Aryan Hedari)**, **rmuxnet (Armandas Kvietkus)**, **GayCorp** — `initramfs-ps4`; **Piotr Karbowski** — better-initramfs | the boot initramfs source Orbis builds from | `packaging/initramfs/` |
 | **rmuxnet** — "Strawberry" kernels | the tutorial's recommended 7.1.7 kernel; candidate for a later Orbis target | `kernel/targets/candidates.md` |
 | **Carlos Georges** — "GPU inference on a PS4" | the only public PS4 Vulkan inference record, including the unresolved long-prefill fault | GRAPHICS-REPORT §5 |
@@ -27,11 +29,11 @@ Orbis is an integration project. Its PS4 support stands on years of community wo
 | Mesa + `graphics/patches/mesa/*` | MIT (per-file notices) + `LICENSE.ps4-mesa` | source; binary packages | provenance json per patch |
 | xf86-video-amdgpu + cursor patch | MIT; **patch licence unstated** | source; binary package | confirm with DionKill/centi_07 before release |
 | llama.cpp | MIT | binary package | pinned b11845 |
-| initramfs-ps4 | GPL-3.0; better-initramfs parts BSD-3-Clause | source in `orbis-platform`; locally built archive | |
-| Liverpool/Gladius GPU firmware | **unknown / not granted** | **never shipped** | operator-supplied; hash-checked |
+| initramfs-ps4 + `packaging/initramfs/patches/*` | GPL-3.0; better-initramfs parts BSD-3-Clause | source in `orbis-platform`; locally built archive | Orbis patches are GPL-3.0 like the files they change; the stage-0 overlay is MIT |
+| Liverpool/Gladius GPU firmware | **unknown / not granted** | **never in source or redistributable archives** | from a verified community initramfs per profile, hash-checked; images that carry it are marked private (`redistributable: false`) |
 | MediaTek MT7668 `mt7668pr2h.bin` | linux-firmware LICENCE.mediatek | **not shipped** (Arch `linux-firmware-mediatek`) | |
 | MediaTek MT7668 Wi-Fi blobs (EEPROM, patches, RAM code) | **none recorded** | **never shipped** | operator-supplied |
-| Marvell sd8797/sd8897 | linux-firmware LICENCE.Marvell | via Arch `linux-firmware-marvell` | |
+| Marvell sd8797/sd8897 | linux-firmware LICENCE.Marvell (binary redistribution with Marvell silicon) | rootfs: via Arch `linux-firmware-marvell`; initramfs copy: from the community file, treated as operator-supplied | identity with linux-firmware checked by `firmware-provenance.json` (LIC-003) |
 | Fonts/icons | system packages only (no bundled fonts or icons in the UI) | — | UI uses system fonts and an original SVG mark |
 | Arch Linux packages | various (per package) | via the Arch Linux Archive snapshot | SBOM lists the snapshot; `packages.txt` lists exact versions |
 

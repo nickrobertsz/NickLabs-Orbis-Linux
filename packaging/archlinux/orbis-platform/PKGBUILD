@@ -1,6 +1,6 @@
 # NickLabs Orbis — platform layer: mode engine, orbisd, orbis-web, CLI, units, hooks, UI, GPU probe.
 pkgname=orbis-platform
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="NickLabs PS4 Orbis Linux platform layer (PC · GAMING · AI mode engine, diagnostics, LAN dashboard)"
 arch=('x86_64')

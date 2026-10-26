@@ -1,0 +1,50 @@
+{
+  "output": "out/release/orbis-0.1.0-stage0-cuh-1215a.img",
+  "layout_sectors": {
+    "total_sectors": 2097152,
+    "boot": [
+      2048,
+      1048576
+    ],
+    "root": [
+      1050624,
+      1046528
+    ]
+  },
+  "bootargs": "pci=nocrs intremap=off root=LABEL=ORBIS-ROOT rootfstype=ext4 rootwait rw video=HDMI-A-1:1920x1080@60 consoleblank=0 net.ifnames=0 orbis.mode=pc orbis.stage0=1",
+  "vram_mb": 1024,
+  "stage0": true,
+  "files": {
+    "bzImage": "out/kernel/aeolia-belize-6.15/bzImage",
+    "initramfs.cpio.gz": "out/initramfs/initramfs-cuh-1215a.cpio.gz"
+  },
+  "rootfs_dir": null,
+  "fat_writer": "builtin",
+  "boot": {
+    "schema": 1,
+    "builder": "NickLabs Orbis make_usb_image.py",
+    "stage0": true,
+    "bootargs": "pci=nocrs intremap=off root=LABEL=ORBIS-ROOT rootfstype=ext4 rootwait rw video=HDMI-A-1:1920x1080@60 consoleblank=0 net.ifnames=0 orbis.mode=pc orbis.stage0=1",
+    "vram_mb": 1024,
+    "kernel": {
+      "sha256": "cbc11420cba2ed839a242380361dffe9640b63aea530cb71aacffba46c0ec157",
+      "version": "6.15.4-orbis-ps4-g108ef9764583-dirty (root@vm) #1 SMP PREEMPT_DYNAMIC Fri Oct 23 15:19:49 PDT 2026",
+      "loader_check": "ok",
+      "x86_ps4": "y"
+    },
+    "initramfs": {
+      "sha256": "f2c158844f23856a325b541f17ca66865a4175046e9ae7d7e4a5c05d9c080960",
+      "profile": "cuh-1215a",
+      "firmware_groups": [
+        "liverpool-gpu",
+        "marvell-88w8797",
+        "marvell-88w8897"
+      ],
+      "manifest": "present"
+    },
+    "redistributable": false
+  },
+  "fat_readback": "ok",
+  "fsck_fat": "clean",
+  "sha256": "067a1ab4e5faecb2d5fe4ed750ef27b3bc730e97adf8915936bc2aee2cb7751d"
+}

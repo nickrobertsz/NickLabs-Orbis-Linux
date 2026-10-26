@@ -4,7 +4,11 @@
 #
 #   packaging/release.sh [--profile cuh-1215a] [--kernel-tar FILE | --build-kernel]
 #                        [--stage0-only] [--internet-allowed] [--sign] [--size 32G]
-#                        [--engine podman|docker] [--yes]
+#                        [--engine podman|docker] [--ssh-key FILE] [--no-password]
+#
+# Login on the console: user 'orbis'. The release asks for an initial password (changed at
+# first login) unless --no-password; --ssh-key adds your public key (default: ~/.ssh/id_ed25519.pub
+# when it exists). At least one of the two is required for a full image.
 #
 # Steps (each prints what it does; nothing touches a disk — flashing is a separate command):
 #   1  fetch + verify community references (firmware source, loader payload, recovery kernel)
@@ -21,7 +25,7 @@ set -euo pipefail
 R="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$R"
 profile="cuh-1215a"; kernel_tar=""; build_kernel=0; stage0_only=0; internet=0; sign=0
-size="32G"; engine=""; yes=0
+size="32G"; engine=""; sshkey=""; nopw=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --profile) profile="$2"; shift 2 ;;
@@ -32,7 +36,8 @@ while [ $# -gt 0 ]; do
     --sign) sign=1; shift ;;
     --size) size="$2"; shift 2 ;;
     --engine) engine="$2"; shift 2 ;;
-    --yes) yes=1; shift ;;
+    --ssh-key) sshkey="$(realpath "$2")"; shift 2 ;;
+    --no-password) nopw=1; shift ;;
     *) echo "unknown arg $1" >&2; exit 2 ;;
   esac
 done
@@ -56,6 +61,16 @@ if [ "$stage0_only" = 0 ]; then
   free_gb=$(df -Pk "$R" | awk 'NR==2 {print int($4/1048576)}')
   [ "$free_gb" -ge 60 ] || echo "WARNING: ${free_gb} GB free here; a full release needs about 60 GB" >&2
   SUDO=""; [ "$(id -u)" = 0 ] || SUDO="sudo"
+  [ -n "$sshkey" ] || { [ -f "$HOME/.ssh/id_ed25519.pub" ] && sshkey="$HOME/.ssh/id_ed25519.pub"; } || true
+  pwhash=""
+  if [ "$nopw" = 0 ]; then
+    need openssl "sudo dnf install openssl"
+    read -r -s -p "Initial password for user 'orbis' on the console (changed at first login): " pw1; echo
+    read -r -s -p "Again: " pw2; echo
+    [ -n "$pw1" ] && [ "$pw1" = "$pw2" ] || { echo "passwords empty or different" >&2; exit 2; }
+    pwhash="$(printf '%s' "$pw1" | openssl passwd -6 -stdin)"; unset pw1 pw2
+  fi
+  [ -n "$sshkey" ] || [ -n "$pwhash" ] || { echo "need --ssh-key or a password for the console login" >&2; exit 2; }
 fi
 echo "profile=$profile target=$TARGET model=${model:-?} snapshot=$SNAPSHOT version=$VERSION engine=${engine:-none}"
 
@@ -115,6 +130,8 @@ step 8 "root filesystem (Arch snapshot $SNAPSHOT + local [orbis] repo)"
 args=(--snapshot "$SNAPSHOT" --repo out/repo --out out/rootfs --keys out/keys)
 [ -n "$model" ] && args+=(--model "$model")
 [ "$internet" = 1 ] && args+=(--internet-allowed)
+if [ -n "$sshkey" ]; then mkdir -p out/keys && cp "$sshkey" out/keys/console-authorized-key.pub && args+=(--authorized-key out/keys/console-authorized-key.pub); fi
+[ -n "$pwhash" ] && args+=(--password-hash "$pwhash")
 run_c packaging/rootfs/build-rootfs.sh "${args[@]}"
 
 step 9 "firmware provenance vs Arch linux-firmware"

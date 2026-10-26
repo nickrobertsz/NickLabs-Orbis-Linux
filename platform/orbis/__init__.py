@@ -8,7 +8,7 @@ Only the Python standard library is used so the platform layer adds no
 dependencies to the base image beyond ``python``.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 #: Version of the local JSON API spoken over the orbisd socket and exposed
 #: by orbis-web under /api/v1. Bump on any incompatible change.

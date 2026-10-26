@@ -14,14 +14,16 @@
 | | PC | GAMING | AI |
 |---|---|---|---|
 | systemd target | `orbis-pc.target` (+`graphical.target`) | `orbis-gaming.target` | `orbis-ai.target` |
-| Runs | LightDM, Xorg (amdgpu DDX), XFCE session, PipeWire (user) | `orbis-gaming-session` on tty1: Xorg + Steam Big Picture / ES-DE / Kodi, optional openbox | `orbis-llama.service` (llama-server, CPU by default) |
+| Runs | LightDM, Xorg (amdgpu DDX), XFCE session, PipeWire (user) | `orbis-gaming-session` on tty1: Xorg + Kodi (LAN-only images) or Steam Big Picture / ES-DE, optional openbox | `orbis-llama.service` (llama-server, CPU by default) |
 | Must not run (verified after switch) | llama-server, Steam/gamescope/ES-DE session | display manager, XFCE, llama-server | **anything graphical**, and in CPU mode **any DRM client** |
 | `vram.txt` preset (min / preferred) | 512 / 1024 MB | 1024 / 2048 MB | CPU: 32 / 128 MB · Vulkan: 512 / 1024 MB |
 | Power preset | balanced | performance | balanced (quiet/performance selectable) |
 | `vm.swappiness` | 60 | 20 | 10 (+ `vfs_cache_pressure=50`) |
 | Readiness check | `display-manager.service` active | `orbis-gaming-session.service` active | `GET /health` on 127.0.0.1:8081 |
 
-**Shared necessities (`multi-user.target`, every mode):** systemd + journald, udev, NetworkManager, sshd, orbisd, orbis-web (**socket-activated**: it exits after 10 idle minutes), zram swap, getty.
+**Shared necessities (`multi-user.target`, every mode):** systemd + journald, udev, NetworkManager, sshd, orbisd, orbis-web (**socket-activated**: it exits after 10 idle minutes), zram swap, getty, and the LAN-only nftables policy (`orbis-lan-only.service`; a oneshot with no resident process).
+
+**GAMING on LAN-only consoles:** Steam needs the internet to sign in and to download its runtime, so release images built LAN-only set `gaming.frontend = "kodi"`. Steam stays installed for consoles where `/etc/orbis/allow-internet` exists.
 
 ## Measured so far
 
@@ -45,6 +47,7 @@ These are **estimates** for idle "used" memory (`MemTotal − MemAvailable`) aft
 | AI with a Q4_K_M 1.5B model, ctx 4096 | ≈ 300 + weights (~1.0 GiB) + KV (~0.1 GiB) + compute buffer | computed per model by `orbis ai plan` from GGUF metadata |
 | PC (XFCE idle, no browser) | ≤ 750 MiB | XFCE + Xorg + PipeWire |
 | GAMING (Steam Big Picture idle) | ≤ 1.1 GiB | Steam's CEF client dominates |
+| GAMING (Kodi idle, LAN-only default) | ≤ 700 MiB | Kodi + Xorg; estimate |
 
 ## Switch strategy
 
