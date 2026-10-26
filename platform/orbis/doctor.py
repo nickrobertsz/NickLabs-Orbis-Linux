@@ -15,7 +15,7 @@ import time
 from dataclasses import asdict, dataclass, field
 
 from . import (MODES, __version__, ai, bootfs, bzimage, capabilities, config, gpu, hardware,
-               isa_audit, memory, paths)
+               isa_audit, memory, netpolicy, paths)
 
 SEVERITY_ORDER = {"FAIL": 3, "WARN": 2, "INFO": 1, "OK": 0}
 
@@ -198,6 +198,9 @@ def run(cfg: dict | None = None, deep: bool = False, probe: bool = True) -> Repo
     rep.add("network", "OK" if up else "WARN",
             f"{len(up)} interface(s) up: " + ", ".join(f"{n['name']}({n['driver']})" for n in up) if up
             else "no network interface is up; remote administration unavailable")
+    np_ = netpolicy.status(cfg)
+    rep.add("network.lan_only", np_["severity"], np_["message"],
+            expected=np_["expected"], active=np_["active"], detail=np_["detail"])
     s = inv["sensors"]
     rep.add("sensors", "OK" if s["temperatures"] else "INFO",
             (f"{len(s['temperatures'])} temperature sensor(s)" if s["temperatures"] else "no temperature sensors exposed")

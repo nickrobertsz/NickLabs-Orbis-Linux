@@ -1,0 +1,47 @@
+{
+ "schema": 1,
+ "policy": "Reference inputs fetched by the operator with packaging/scripts/orbis-fetch-references.sh. Orbis never redistributes them and never boots them in place of Orbis without saying so. Hashes were verified on the Orbis build host on 2026-10-26.",
+ "artifacts": [
+  {
+   "name": "community-initramfs",
+   "role": "firmware source for build_initramfs.py (its init is NOT used: it is GayCorp initramfs-ps4 ~v0.9 with init hard-wired to 'mount LABEL=psxitarch')",
+   "url": "https://github.com/X-F1REBALL-X/PS4-Linux/releases/download/v1.0/initramfs.cpio.gz",
+   "file": "initramfs.cpio.gz",
+   "bytes": 4102011,
+   "sha256": "3f373bd6c469e490eaf4e5cf4d2e8ed77cf7bb91449b6a18da6a6529d479169b",
+   "contains_firmware": true,
+   "redistribute": false
+  },
+  {
+   "name": "loader-payload-1024",
+   "role": "prebuilt ps4-linux-loader AIO payload (1024 MB default VRAM; vram.txt overrides). Orbis also documents building it from ps4-linux/ps4-linux-loader@d0f4d4c",
+   "url": "https://github.com/X-F1REBALL-X/PS4-Linux/releases/download/v1.0/linux-1024mb.elf",
+   "file": "linux-1024mb.elf",
+   "bytes": 320936,
+   "sha256": "623c3b68592437b612ede22a4fc1a6f1eef6b17c4b16a1270100ece04cb3c98f",
+   "contains_firmware": false,
+   "redistribute": false
+  },
+  {
+   "name": "reference-kernel-belize-7.1.7",
+   "role": "recovery/comparison kernel only; does not replace the Orbis 6.15.4 kernel",
+   "url": "https://github.com/X-F1REBALL-X/PS4-Linux/releases/download/v1.0/bzImage-belize-7.1.7",
+   "file": "bzImage-belize-7.1.7",
+   "bytes": 20415488,
+   "sha256": "072113898347932c34888cfdc7556953ee27233c0727cc45f419a57119242480",
+   "contains_firmware": true,
+   "redistribute": false,
+   "orbis_check": {
+    "loader_contract": "ok (protocol 2.15, relocatable, zstd payload)",
+    "kernel_version": "7.1.7-Strawberry-General-FullLTO+",
+    "embedded_firmware": [
+     "mrvl/sd8897_uapsta.bin",
+     "mrvl/sd8797_uapsta.bin",
+     "mediatek/mt7668pr2h.bin",
+     "MT7668 vendor files (9)"
+    ],
+    "checked": "2026-10-26"
+   }
+  }
+ ]
+}

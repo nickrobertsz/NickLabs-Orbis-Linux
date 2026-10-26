@@ -2,6 +2,8 @@
 # All Arch repositories point at ONE Arch Linux Archive snapshot. `orbis update` moves the
 # snapshot date only after the new date has been qualified (see BUILD-AND-DEPLOY.md).
 # Do NOT add CachyOS v3/v4 or any x86-64-v3 repository: Jaguar cannot execute it.
+# With the LAN-only policy active the Arch snapshot servers below are unreachable from the
+# console; Arch packages then stay at this snapshot until a new image or a LAN mirror.
 [options]
 Architecture = x86_64
 HoldPkg = pacman glibc
@@ -10,9 +12,14 @@ ParallelDownloads = 3
 SigLevel = Required DatabaseOptional
 LocalFileSigLevel = Optional
 
+# Orbis packages live INSIDE this system (/var/lib/orbis/repo, copied in when the image was
+# built), so reinstalling or repairing works with no network. Newer Orbis packages arrive
+# from a repo served on the LAN or a USB disk:  orbis-update --orbis-only --from URL
+# SigLevel is Required when the release was signed with a local NickLabs key
+# (packaging/scripts/orbis-repo-key.sh); see /usr/share/orbis/repo-signing.txt.
 [orbis]
-SigLevel = Required
-Server = https://packages.nicklabs.invalid/orbis/$arch
+SigLevel = @ORBIS_SIGLEVEL@
+Server = file:///var/lib/orbis/repo
 
 [core]
 Server = https://archive.archlinux.org/repos/@SNAPSHOT@/$repo/os/$arch

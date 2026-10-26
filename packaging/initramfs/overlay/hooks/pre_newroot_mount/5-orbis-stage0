@@ -1,0 +1,11 @@
+#!/bin/sh
+# NickLabs Orbis (MIT): with orbis.stage0=1 on the kernel command line, write a hardware
+# report to the USB boot partition (orbis-logs/) and stop in the rescue shell before any
+# root filesystem is mounted. 'resume-boot' in that shell continues a normal boot.
+if grep -qw "orbis.stage0=1" /proc/cmdline; then
+	einfo "Orbis stage 0: collecting a hardware report ..."
+	/bin/orbis-stage0-report
+	ewarn "Orbis stage 0 finished. Take the USB disk to a PC and read orbis-logs/."
+	ewarn "To boot normally, remove orbis.stage0=1 from bootargs.txt (or run 'resume-boot')."
+	rescueshell
+fi

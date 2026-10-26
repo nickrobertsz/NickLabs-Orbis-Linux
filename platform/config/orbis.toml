@@ -25,6 +25,13 @@ mountpoint = "/boot/ps4"
 # power of two; 32/64 MB caused display problems for some users (community guide).
 allowed_vram_mb = [128, 256, 512, 1024, 2048]
 
+[network]
+# LAN-only policy (orbis-lan-only.service): the console reaches the local network only.
+# Not settable from the dashboard. To allow the internet: create /etc/orbis/allow-internet
+# (or disable the service) and reboot. Updates then come from the in-image [orbis] repo or
+# a repo served on the LAN (orbis-update --orbis-only --from http://LAN-HOST:8780/).
+lan_only = true
+
 [web]
 listen = "0.0.0.0"
 port = 8420
@@ -46,7 +53,9 @@ headroom_mib = 512
 power_preset = "balanced"
 
 [gaming]
-frontend = "steam-gamepadui"   # steam-gamepadui | es-de | kodi | none
+# steam-gamepadui | es-de | kodi | none. Steam needs the internet to sign in and to fetch its
+# runtime, so LAN-only release images set "kodi" in /etc/orbis/orbis.toml.
+frontend = "steam-gamepadui"
 
 [alerts]
 interval_s = 15

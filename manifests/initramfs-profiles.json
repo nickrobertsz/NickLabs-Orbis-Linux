@@ -1,0 +1,38 @@
+{
+ "schema": 1,
+ "note": "Initramfs firmware profiles for packaging/initramfs/build_initramfs.py. Required groups must be present and verified; optional groups are included only when present and verified, otherwise skipped and recorded.",
+ "profiles": {
+  "cuh-1215a": {
+   "description": "NickLabs primary console: CUH-1215A, original (fat) CUH-12xx, Belize southbridge, Liverpool GPU, Marvell 88W8897 (Torus 2) Wi-Fi/BT",
+   "hardware_source": "stated by Nick 2026-10-26 (system firmware 13.50, GoldHEN); not yet confirmed from console logs",
+   "kernel_target": "aeolia-belize-6.15",
+   "required_groups": [
+    "liverpool-gpu",
+    "marvell-88w8897"
+   ],
+   "optional_groups": [
+    "marvell-88w8797",
+    "edid"
+   ],
+   "model": "CUH-1215A"
+  },
+  "aeolia-belize-generic": {
+   "description": "Any Aeolia/Belize console (CUH-10xx..12xx, CUH-2xxx Belize slims): GPU firmware required, Wi-Fi/BT firmware if present",
+   "kernel_target": "aeolia-belize-6.15",
+   "required_groups": [
+    "liverpool-gpu"
+   ],
+   "optional_groups": [
+    "marvell-88w8897",
+    "marvell-88w8797",
+    "edid"
+   ]
+  },
+  "firmware-free": {
+   "description": "Redistributable initramfs with no firmware at all. On ps4-linux-loader >= v24b the 8 core GPU microcode files and the EDID are extracted from the console at boot; hardware video decode/encode (UVD/VCE) and Wi-Fi/BT stay unavailable until firmware is installed.",
+   "kernel_target": "aeolia-belize-6.15",
+   "required_groups": [],
+   "optional_groups": []
+  }
+ }
+}

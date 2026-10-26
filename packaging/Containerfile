@@ -9,6 +9,6 @@ RUN printf 'Server = https://archive.archlinux.org/repos/%s/$repo/os/$arch\n' "$
       clang lld llvm bc flex bison libelf pahole cpio perl \
       meson ninja python-mako python-packaging python-yaml glslang shaderc spirv-headers vulkan-headers \
       cmake xorgproto wayland-protocols cbindgen directx-headers byacc \
-      dosfstools mtools e2fsprogs zstd xz \
+      dosfstools mtools e2fsprogs zstd xz gnupg \
  && useradd -m builder && echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
 WORKDIR /src

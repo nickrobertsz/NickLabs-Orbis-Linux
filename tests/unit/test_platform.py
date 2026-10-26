@@ -292,3 +292,37 @@ class ConfigTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NetPolicyTests(unittest.TestCase):
+    def _run(self, rc, out="", err=""):
+        class R:
+            returncode, stdout, stderr = rc, out, err
+        return lambda *a, **k: R()
+
+    def test_states(self):
+        from unittest import mock
+        from orbis import netpolicy
+        table = "table inet orbis_lan_only {\n chain output {\n ip daddr @lan4 accept\n }\n}"
+        with mock.patch("shutil.which", return_value="/usr/bin/nft"):
+            self.assertEqual(netpolicy.status({}, run=self._run(0, table))["severity"], "OK")
+            st = netpolicy.status({}, run=self._run(1, err="Error: No such file or directory"))
+            self.assertEqual(st["severity"], "FAIL")
+            self.assertFalse(st["active"])
+            st = netpolicy.status({}, run=self._run(1, err="Operation not permitted"))
+            self.assertEqual((st["severity"], st["active"]), ("INFO", None))
+            st = netpolicy.status({"network": {"lan_only": False}}, run=self._run(1, err="No such file"))
+            self.assertEqual(st["severity"], "OK")
+            self.assertIn("disabled", st["message"])
+        with mock.patch("shutil.which", return_value=None):
+            self.assertIsNone(netpolicy.status({})["active"])
+
+    def test_ruleset_shape(self):
+        text = (REPO / "platform/misc/nftables-orbis-lan-only.nft").read_text()
+        for needle in ("table inet orbis_lan_only", "192.168.0.0/16", "10.0.0.0/8", "172.16.0.0/12",
+                       "fc00::/7", "fe80::/10", "reject with icmpx admin-prohibited", "ct state established,related accept"):
+            self.assertIn(needle, text)
+        self.assertNotIn("100.64.0.0/10", text)  # CGNAT is not the LAN
+        unit = (REPO / "platform/systemd/orbis-lan-only.service").read_text()
+        self.assertIn("Before=network-pre.target", unit)
+        self.assertIn("ConditionPathExists=!/etc/orbis/allow-internet", unit)

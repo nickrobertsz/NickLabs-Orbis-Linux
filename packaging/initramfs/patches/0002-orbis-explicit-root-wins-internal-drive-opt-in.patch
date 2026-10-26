@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: NickLabs Orbis <orbis@nicklabs.invalid>
+Date: Mon, 26 Oct 2026 07:58:50 -0700
+Subject: [PATCH 2/2] orbis: explicit root= wins; internal drive opt-in
+
+---
+ init | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/init b/init
+index 199062a..cdb324d 100644
+--- a/init
++++ b/init
+@@ -86,15 +86,27 @@ use uswsusp && UswsuspResume
+ use tuxonice TuxOnIceResume
+ run_hooks pre_newroot_mount
+ use rootdelay rootdelay
+-ps4_wait_disks 8
++# NickLabs Orbis: with root= on the command line, wait for that device instead
++# of a LABEL=psxitarch disk.
++if use root; then
++	orbis_wait_root 30 && ps4_fsck "$(orbis_root_dev)"
++else
++	ps4_wait_disks 8
++fi
+ echo
+ 
+-if ! ps4_is_southbridge "baikal"; then
++# NickLabs Orbis: an explicit root= wins. Discovery (LABEL=psxitarch, then the
++# internal linux.img) runs only when no root= is given, so an older install on
++# the same console is never booted in place of the requested root. With root=,
++# the PS4 internal drive is opened only on request (orbis.ps4hdd=1).
++if ! ps4_is_southbridge "baikal" && { ! use root || orbis_cmdline orbis.ps4hdd=1; }; then
+ 	ps4hdd_open # just so its accessible from the os...
+ 	run_hooks ps4hdd_open
+ fi
+-if ! ps4_find_install && use root; then
++if use root; then
+ 	emount /newroot
++else
++	ps4_find_install
+ fi
+ while ! mountpoint -q /newroot; do
+ 	eerror "No Linux installation is mounted on /newroot."

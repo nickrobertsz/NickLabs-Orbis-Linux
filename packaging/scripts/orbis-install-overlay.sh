@@ -2,7 +2,7 @@
 # Install Orbis on an EXISTING Arch-based PS4 installation (e.g. the community CachyOS
 # Light or Arch images) instead of flashing a new disk. Dry run unless --apply.
 #
-#   sudo ./orbis-install-overlay.sh --repo URL_OR_DIR [--boot-dev /dev/sdX1] [--apply]
+#   sudo ./orbis-install-overlay.sh --repo URL_OR_DIR [--boot-dev /dev/sdX1] [--profile cuh-1215a] [--apply]
 #
 # Steps (each printed before it runs):
 #   1. refuse x86-64-v3/v4 repos (Jaguar SIGILL) and non-PS4 hardware
@@ -15,12 +15,13 @@
 #      current kernel as bzImage.orbis-prev
 # Nothing outside the Linux root and the PS4 FAT partition is touched.
 set -euo pipefail
-apply=0; repo=""; bootdev=""
+apply=0; repo=""; bootdev=""; profile="aeolia-belize-generic"
 while [ $# -gt 0 ]; do
   case "$1" in
     --apply) apply=1; shift ;;
     --repo) repo="$2"; shift 2 ;;
     --boot-dev) bootdev="$2"; shift 2 ;;
+    --profile) profile="$2"; shift 2 ;;
     *) echo "unknown arg $1" >&2; exit 2 ;;
   esac
 done
@@ -55,8 +56,12 @@ fi
 [ -f /boot/ps4/initramfs.cpio.gz ] || { echo "!! no initramfs.cpio.gz on the boot partition to take firmware from" >&2; exit 4; }
 src=/usr/share/orbis/initramfs-ps4-src
 run mkdir -p /usr/lib/orbis/initramfs
-echo "+ build Orbis initramfs (firmware taken from your current /boot/ps4/initramfs.cpio.gz, verified by hash)"
-[ "$apply" = 1 ] && python3 /usr/lib/orbis/build_initramfs.py --src "$src" --firmware-from /boot/ps4/initramfs.cpio.gz \
-    --manifest /usr/share/orbis/firmware.json -o /usr/lib/orbis/initramfs/initramfs.cpio.gz
+echo "+ build Orbis initramfs, profile $profile (firmware taken from your current /boot/ps4/initramfs.cpio.gz, verified by hash)"
+[ "$apply" = 1 ] && python3 /usr/lib/orbis/build_initramfs.py --src "$src" --profile "$profile" \
+    --firmware-from /boot/ps4/initramfs.cpio.gz --manifest /usr/share/orbis/firmware.json \
+    --profiles /usr/share/orbis/initramfs-profiles.json --sources /usr/share/orbis/sources.json \
+    --patches /usr/share/orbis/initramfs-patches --check-script /usr/lib/orbis/initramfs-root-selection-check \
+    --overlay /usr/share/orbis/initramfs-overlay \
+    -o /usr/lib/orbis/initramfs/initramfs.cpio.gz
 run pacman -S --noconfirm linux-orbis-ps4
 echo "== done. Next: 'orbis doctor', then relaunch the payload. Rollback: 'orbis boot rollback-kernel'."

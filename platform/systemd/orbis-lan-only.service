@@ -1,0 +1,17 @@
+[Unit]
+Description=NickLabs Orbis LAN-only network policy (no public internet)
+Documentation=file:///usr/share/doc/orbis/BUILD-AND-DEPLOY.md
+DefaultDependencies=no
+After=local-fs.target
+Before=network-pre.target
+Wants=network-pre.target
+ConditionPathExists=!/etc/orbis/allow-internet
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/nft -f /usr/lib/orbis/nftables/lan-only.nft
+ExecStop=/usr/bin/nft delete table inet orbis_lan_only
+
+[Install]
+WantedBy=multi-user.target

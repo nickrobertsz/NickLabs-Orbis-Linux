@@ -1,0 +1,105 @@
+#!/bin/sh
+# NickLabs Orbis stage-0 hardware report (MIT). Runs inside the Orbis initramfs (busybox sh).
+#
+# Writes orbis-logs/stage0-NNN.txt (plus the full kernel log) to the FAT partition
+# labelled ORBIS-BOOT, so a console can be qualified before any root filesystem exists
+# and without a network. Read the files on any PC.
+#
+# Privacy: the PS4 HDD key the loader places in /key is never read or copied, and
+# network MAC addresses are not recorded.
+label="${ORBIS_BOOT_LABEL:-ORBIS-BOOT}"
+mnt=/mnt/orbis-boot
+have() { command -v "$1" >/dev/null 2>&1; }
+
+dev=""
+n=0
+while [ "$n" -lt 30 ]; do
+	dev="$(findfs "LABEL=${label}" 2>/dev/null)" && [ -n "$dev" ] && break
+	sleep 1
+	n=$((n + 1))
+done
+if [ -z "$dev" ]; then
+	echo "orbis-stage0-report: no partition labelled ${label} after 30s; report printed to the screen only" >&2
+fi
+
+report() {
+	echo "== NickLabs Orbis stage-0 report"
+	echo "initramfs: $(cat /GIT_HASH 2>/dev/null) $(cat /VERSION 2>/dev/null)"
+	echo "build: $(cat /ORBIS_BUILD 2>/dev/null)"
+	echo "kernel: $(uname -a)"
+	echo "cmdline: $(cat /proc/cmdline)"
+	echo
+	echo "== southbridge / loader"
+	dmesg | grep -i -m3 "southbridge"
+	dmesg | grep -i -m5 -E "ps4|aeolia|belize|baikal" | grep -v -i southbridge
+	[ -e /key/eap_hdd_key.bin ] && echo "loader HDD key: present (not read)" || echo "loader HDD key: absent"
+	if [ -e /lib/firmware/edid/my_edid.bin ]; then
+		echo "loader EDID (lib/firmware/edid/my_edid.bin):"
+		have hexdump && hexdump -C /lib/firmware/edid/my_edid.bin | head -n 20
+	else
+		echo "loader EDID: absent"
+	fi
+	echo
+	echo "== cpu / memory"
+	grep -m1 "model name" /proc/cpuinfo
+	grep -c "^processor" /proc/cpuinfo | awk '{print "cpus: " $1}'
+	grep -m1 "^flags" /proc/cpuinfo
+	grep -E "^(MemTotal|MemFree|MemAvailable|CmaTotal):" /proc/meminfo
+	echo
+	echo "== pci (vendor device class driver)"
+	for d in /sys/bus/pci/devices/*; do
+		[ -e "$d/vendor" ] || continue
+		drv=""
+		[ -L "$d/driver" ] && drv="$(basename "$(readlink "$d/driver")")"
+		echo "$(basename "$d") $(cat "$d/vendor") $(cat "$d/device") $(cat "$d/class") ${drv}"
+	done
+	echo
+	echo "== drm"
+	for c in /sys/class/drm/card*-*; do
+		[ -e "$c/status" ] || continue
+		echo "$(basename "$c"): status=$(cat "$c/status") enabled=$(cat "$c/enabled" 2>/dev/null) dpms=$(cat "$c/dpms" 2>/dev/null)"
+		[ -e "$c/modes" ] && awk '{print "    mode " $0}' "$c/modes"
+	done
+	echo
+	echo "== firmware in this initramfs"
+	for f in /lib/firmware/*/* /lib/firmware/*; do
+		[ -f "$f" ] || continue
+		if have sha256sum; then sha256sum "$f"; else echo "$f"; fi
+	done
+	echo
+	echo "== network interfaces (driver only)"
+	for i in /sys/class/net/*; do
+		[ -e "$i" ] || continue
+		drv=""
+		[ -L "$i/device/driver" ] && drv="$(basename "$(readlink "$i/device/driver")")"
+		echo "$(basename "$i") ${drv}"
+	done
+	echo
+	echo "== block devices"
+	blkid 2>/dev/null
+	for b in /sys/block/*; do
+		[ -e "$b/size" ] && echo "$(basename "$b") sectors=$(cat "$b/size") removable=$(cat "$b/removable" 2>/dev/null)"
+	done
+	echo
+	echo "== kernel messages of interest"
+	dmesg | grep -i -E "amdgpu|drm|radeon|firmware|mwifiex|btmrvl|mt76|sdhci|mmc|hdmi|edid|xhci|usb-storage|error|fail|warn|bug|oops|panic" | tail -n 400
+}
+
+if [ -n "$dev" ]; then
+	mkdir -p "$mnt"
+	if mount -t vfat -o rw,flush "$dev" "$mnt"; then
+		mkdir -p "$mnt/orbis-logs"
+		i=1
+		while [ -e "$mnt/orbis-logs/stage0-$(printf %03d "$i").txt" ]; do i=$((i + 1)); done
+		f="$mnt/orbis-logs/stage0-$(printf %03d "$i").txt"
+		report > "$f" 2>&1
+		dmesg > "$mnt/orbis-logs/stage0-$(printf %03d "$i")-dmesg.txt" 2>&1
+		sync
+		umount "$mnt"
+		echo "orbis-stage0-report: wrote orbis-logs/stage0-$(printf %03d "$i").txt and -dmesg.txt on ${label} (${dev})"
+		exit 0
+	fi
+	echo "orbis-stage0-report: could not mount ${dev}" >&2
+fi
+report
+exit 1

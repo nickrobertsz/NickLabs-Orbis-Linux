@@ -8,6 +8,7 @@ dosfstools
 e2fsprogs
 btrfs-progs
 networkmanager
+nftables
 openssh
 sudo
 zram-generator

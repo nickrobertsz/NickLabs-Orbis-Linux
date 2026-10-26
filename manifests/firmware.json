@@ -1,192 +1,239 @@
 {
-  "schema": 1,
-  "policy": "Orbis never bundles or redistributes firmware. Files are supplied by the operator (normally extracted from the community initramfs.cpio.gz they already boot) and verified against these hashes. A hash mismatch is reported, not silently accepted.",
-  "groups": {
-    "liverpool-gpu": {
-      "required_for": [
-        "display",
-        "OpenGL",
-        "Vulkan"
-      ],
-      "needed_in": "initramfs (amdgpu is built into the kernel and loads firmware before the root mounts)",
-      "redistribution": "UNKNOWN / not granted \u2014 Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)",
-      "hash_source": "meerzulee/omarchy-psx@625cb1ba manifests/ps4-initramfs.json (one console's initramfs); other consoles/firmware versions may legitimately differ",
-      "files": [
-        {
-          "path": "amdgpu/liverpool_ce.bin",
-          "bytes": 8832,
-          "sha256": "173ff0d1633fa0e0a22e0b7e92780b4ec9bb0a72346f0c0ccd8ffe899078763a"
-        },
-        {
-          "path": "amdgpu/liverpool_me.bin",
-          "bytes": 17024,
-          "sha256": "ab835c37011af3af2a597f2fd806e155cccb869e2e2171e65c2524dade506056"
-        },
-        {
-          "path": "amdgpu/liverpool_mec.bin",
-          "bytes": 17024,
-          "sha256": "e86d5846f8433bc682b7dbdf2a4563ec1c527e223ca77460ef15294507b9ba32"
-        },
-        {
-          "path": "amdgpu/liverpool_mec2.bin",
-          "bytes": 17024,
-          "sha256": "f3250bc60e0ff24a80830ebda428fc781d641395e5977d84588694d803cd993a"
-        },
-        {
-          "path": "amdgpu/liverpool_pfp.bin",
-          "bytes": 17024,
-          "sha256": "d2b3ce936f184b4fa0fe10fd867c125b5902862377a5343f03c11f76be62343f"
-        },
-        {
-          "path": "amdgpu/liverpool_rlc.bin",
-          "bytes": 6400,
-          "sha256": "8c26efaac42f508042b8db0ed04efe7a2ee5e30ad3ae139f0846fbb3cf85abca"
-        },
-        {
-          "path": "amdgpu/liverpool_sdma.bin",
-          "bytes": 4456,
-          "sha256": "638602157d38a25e584e81710c9c3a36731c52599d92e010b77dd53890dc662a"
-        },
-        {
-          "path": "amdgpu/liverpool_sdma1.bin",
-          "bytes": 4456,
-          "sha256": "8bb8fc3280153dbc9dc545d3ec046fa38361be5acf7e6f956aa0fd57196c84b8"
-        },
-        {
-          "path": "amdgpu/liverpool_uvd.bin",
-          "bytes": 232752,
-          "sha256": "30eed8d680321bdc6213409a4a882442049b2a559eadb9ee2554d53b0cfb96c9"
-        },
-        {
-          "path": "amdgpu/liverpool_vce.bin",
-          "bytes": 101072,
-          "sha256": "fb768657d70c8674c1c48a284e5299ab2877ac2420957ea4b36c75f7f5997869"
-        }
-      ]
+ "schema": 1,
+ "policy": "Orbis never puts firmware in a redistributable archive unless redistribution rights are established and recorded here. Files are supplied by the operator (normally extracted from a community initramfs.cpio.gz they choose) and verified against these hashes; required groups refuse on a missing file, optional groups are included only when present and verified. A hash mismatch is reported, never silently accepted.",
+ "groups": {
+  "liverpool-gpu": {
+   "required_for": [
+    "display",
+    "OpenGL",
+    "Vulkan"
+   ],
+   "needed_in": "initramfs (amdgpu is built into the kernel and loads firmware before the root mounts)",
+   "redistribution": "UNKNOWN / not granted — Sony console firmware; community CI fetches it from a private repository (GayCorp/initramfs-ps4 .github/workflows)",
+   "hash_source": "meerzulee/omarchy-psx@625cb1ba manifests/ps4-initramfs.json (one console's initramfs); other consoles/firmware versions may legitimately differ",
+   "files": [
+    {
+     "path": "amdgpu/liverpool_ce.bin",
+     "bytes": 8832,
+     "sha256": "173ff0d1633fa0e0a22e0b7e92780b4ec9bb0a72346f0c0ccd8ffe899078763a"
     },
-    "gladius-gpu": {
-      "required_for": [
-        "PS4 Pro display/3D"
-      ],
-      "redistribution": "UNKNOWN",
-      "files": [],
-      "note": "amdgpu/gladius_*.bin expected; no hashes recorded yet (UNVERIFIED)"
+    {
+     "path": "amdgpu/liverpool_me.bin",
+     "bytes": 17024,
+     "sha256": "ab835c37011af3af2a597f2fd806e155cccb869e2e2171e65c2524dade506056"
     },
-    "edid": {
-      "files": [
-        {
-          "path": "edid/1920x1080.bin",
-          "bytes": 128,
-          "sha256": "78fae7bf275d9ac2acab158330acdbe4fe823f23453cee21503f70c638a6918e"
-        }
-      ],
-      "note": "generic 1920x1080 EDID used with drm.edid_firmware=edid/1920x1080.bin; optional with kernels whose ps4_bridge hard-codes modes"
+    {
+     "path": "amdgpu/liverpool_mec.bin",
+     "bytes": 17024,
+     "sha256": "e86d5846f8433bc682b7dbdf2a4563ec1c527e223ca77460ef15294507b9ba32"
     },
-    "mediatek-mt7668": {
-      "required_for": [
-        "Wi-Fi/Bluetooth on MT7668 consoles"
-      ],
-      "source": {
-        "linux-firmware": {
-          "repository": "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git",
-          "tag": "20260810",
-          "commit": "2135b2f7714a3a514c989b9728f51f36144cab6f",
-          "url": "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/{path}?id={commit}",
-          "license": "linux-firmware WHENCE, driver btmtk: Redistributable. See LICENCE.mediatek for details."
-        },
-        "ps4-linux-5.4": {
-          "repository": "https://github.com/feeRnt/ps4-linux-12xx",
-          "branch": "5.4.247-baikal-dfaus",
-          "commit": "3070025bad397ad499f3c4919f35e8abd547af2b",
-          "note": "Linux 5.4.247 PS4 Baikal kernel (fork of codedwrench/ps4-linux) whose extra_firmware/ directory the historical 5.4.247-DFAUS kernel embedded through CONFIG_EXTRA_FIRMWARE.",
-          "url": "https://raw.githubusercontent.com/feeRnt/ps4-linux-12xx/{commit}/{path}",
-          "api_url": "https://api.github.com/repos/feeRnt/ps4-linux-12xx/contents/{path}?ref={commit}",
-          "license": "None recorded. MediaTek vendor Wi-Fi driver firmware; keep it local and do not redistribute it."
-        }
-      },
-      "files": [
-        {
-          "path": "mediatek/mt7668pr2h.bin",
-          "bytes": 170990,
-          "sha256": "465ed634c61b46b34bb21240736f33d3d347fefec7cbfbd1cb6e63334aec4cc9",
-          "source": "linux-firmware"
-        },
-        {
-          "path": "EEPROM_MT7668.bin",
-          "bytes": 1024,
-          "sha256": "d3ecac0fde5b66fab282cd97f43c04d77bf4fd6abdbd9c35c5d3d40e2f1f035a",
-          "source": "ps4-linux-5.4"
-        },
-        {
-          "path": "EEPROM_MT7668_e1.bin",
-          "bytes": 1024,
-          "sha256": "a042c6ceb77ae4a0c367e5e5522cbf21f767936b8799a781096e1e72684d957c",
-          "source": "ps4-linux-5.4"
-        },
-        {
-          "path": "mt7668_patch_e1_hdr.bin",
-          "bytes": 152302,
-          "sha256": "519083ebb8318d9cfc8eaaaa7470d1a266c8f32275df3c62e3619d6c07f97389",
-          "source": "ps4-linux-5.4"
-        },
-        {
-          "path": "mt7668_patch_e2_hdr.bin",
-          "bytes": 178782,
-          "sha256": "05a619651517ee481ccfa3ed2cd11bd33f497967802233e6f81085036e0ec9d5",
-          "source": "ps4-linux-5.4"
-        },
-        {
-          "path": "TxPwrLimit_MT76x8.dat",
-          "bytes": 19064,
-          "sha256": "49fa3e52b26fe49b837187c91765550e32cd6540ea2e09343274245d6630062a",
-          "source": "ps4-linux-5.4"
-        },
-        {
-          "path": "wifi.cfg",
-          "bytes": 889,
-          "sha256": "828d7d18607c78513a71719f919340a7c91ee8ef68080ad7270a65dd661abbbd",
-          "source": "ps4-linux-5.4"
-        },
-        {
-          "path": "WIFI_RAM_CODE2_SDIO_MT7668.bin",
-          "bytes": 51816,
-          "sha256": "35faff6a613fefcbe33a6f6d8df885be76c546f9e78ba8ab93056a816ad87254",
-          "source": "ps4-linux-5.4"
-        },
-        {
-          "path": "WIFI_RAM_CODE2_USB_MT7668.bin",
-          "bytes": 55880,
-          "sha256": "b6c6b63f021168a327a0600119a416c4f5f5198820a3267b54a1259c19da0baf",
-          "source": "ps4-linux-5.4"
-        },
-        {
-          "path": "WIFI_RAM_CODE_MT7668.bin",
-          "bytes": 463080,
-          "sha256": "977724f3eef0e6f27567a6684bf616b884b82fe948bde0a436ea546a1f9c83ee",
-          "source": "ps4-linux-5.4"
-        }
-      ],
-      "redistribution": "mediatek/mt7668pr2h.bin: linux-firmware LICENCE.mediatek (redistributable); others: none recorded \u2014 keep local",
-      "hash_source": "meerzulee/omarchy-psx@625cb1ba manifests/ps4-firmware.json"
+    {
+     "path": "amdgpu/liverpool_mec2.bin",
+     "bytes": 17024,
+     "sha256": "f3250bc60e0ff24a80830ebda428fc781d641395e5977d84588694d803cd993a"
     },
-    "marvell-torus": {
-      "required_for": [
-        "Wi-Fi/Bluetooth on Marvell 88W8797/8897 consoles (CUH-10xx..12xx)"
-      ],
-      "files": [
-        {
-          "path": "mrvl/sd8897_uapsta.bin",
-          "source": "linux-firmware",
-          "sha256": null
-        },
-        {
-          "path": "mrvl/sd8797_uapsta.bin",
-          "source": "linux-firmware",
-          "sha256": null
-        }
-      ],
-      "redistribution": "linux-firmware LICENCE.Marvell (redistributable)",
-      "note": "hashes to be pinned at the linux-firmware tag chosen for the release (UNVERIFIED)"
+    {
+     "path": "amdgpu/liverpool_pfp.bin",
+     "bytes": 17024,
+     "sha256": "d2b3ce936f184b4fa0fe10fd867c125b5902862377a5343f03c11f76be62343f"
+    },
+    {
+     "path": "amdgpu/liverpool_rlc.bin",
+     "bytes": 6400,
+     "sha256": "8c26efaac42f508042b8db0ed04efe7a2ee5e30ad3ae139f0846fbb3cf85abca"
+    },
+    {
+     "path": "amdgpu/liverpool_sdma.bin",
+     "bytes": 4456,
+     "sha256": "638602157d38a25e584e81710c9c3a36731c52599d92e010b77dd53890dc662a"
+    },
+    {
+     "path": "amdgpu/liverpool_sdma1.bin",
+     "bytes": 4456,
+     "sha256": "8bb8fc3280153dbc9dc545d3ec046fa38361be5acf7e6f956aa0fd57196c84b8"
+    },
+    {
+     "path": "amdgpu/liverpool_uvd.bin",
+     "bytes": 232752,
+     "sha256": "30eed8d680321bdc6213409a4a882442049b2a559eadb9ee2554d53b0cfb96c9"
+    },
+    {
+     "path": "amdgpu/liverpool_vce.bin",
+     "bytes": 101072,
+     "sha256": "fb768657d70c8674c1c48a284e5299ab2877ac2420957ea4b36c75f7f5997869"
     }
+   ],
+   "redistributable": false,
+   "observed_in": [
+    {
+     "source": "X-F1REBALL-X/PS4-Linux release v1.0 initramfs.cpio.gz",
+     "sha256": "3f373bd6c469e490eaf4e5cf4d2e8ed77cf7bb91449b6a18da6a6529d479169b",
+     "checked": "2026-10-26",
+     "result": "all 10 files byte-identical to the hashes below"
+    }
+   ],
+   "loader_note": "ps4-linux-loader@d0f4d4c (ps4-kexec-common/firmware.c) extracts 8 of these files (pfp, me, ce, mec, mec2, rlc, sdma, sdma1) from the running console at kexec time and places its cpio BEFORE the operator initramfs; files with the same path in the initramfs replace the extracted ones. liverpool_uvd.bin and liverpool_vce.bin are NOT extracted by the loader: hardware video decode/encode needs them in the initramfs."
+  },
+  "gladius-gpu": {
+   "required_for": [
+    "PS4 Pro display/3D"
+   ],
+   "redistribution": "UNKNOWN",
+   "files": [],
+   "note": "amdgpu/gladius_*.bin expected; no hashes recorded yet (UNVERIFIED)",
+   "redistributable": false
+  },
+  "edid": {
+   "files": [
+    {
+     "path": "edid/1920x1080.bin",
+     "bytes": 128,
+     "sha256": "78fae7bf275d9ac2acab158330acdbe4fe823f23453cee21503f70c638a6918e"
+    }
+   ],
+   "note": "Generic 1920x1080 EDID, used only with drm.edid_firmware=edid/1920x1080.bin. Not needed by the Orbis 6.15 kernel (ps4_bridge patch 0001 fixes 1080p60) and absent from the X-F1REBALL-X v1.0 initramfs. The loader separately writes the console's real EDID to lib/firmware/edid/my_edid.bin, which initramfs-ps4's pre_switch_root hook copies into the root.",
+   "optional": true,
+   "redistributable": false
+  },
+  "mediatek-mt7668": {
+   "required_for": [
+    "Wi-Fi/Bluetooth on MT7668 consoles"
+   ],
+   "source": {
+    "linux-firmware": {
+     "repository": "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git",
+     "tag": "20260810",
+     "commit": "2135b2f7714a3a514c989b9728f51f36144cab6f",
+     "url": "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/{path}?id={commit}",
+     "license": "linux-firmware WHENCE, driver btmtk: Redistributable. See LICENCE.mediatek for details."
+    },
+    "ps4-linux-5.4": {
+     "repository": "https://github.com/feeRnt/ps4-linux-12xx",
+     "branch": "5.4.247-baikal-dfaus",
+     "commit": "3070025bad397ad499f3c4919f35e8abd547af2b",
+     "note": "Linux 5.4.247 PS4 Baikal kernel (fork of codedwrench/ps4-linux) whose extra_firmware/ directory the historical 5.4.247-DFAUS kernel embedded through CONFIG_EXTRA_FIRMWARE.",
+     "url": "https://raw.githubusercontent.com/feeRnt/ps4-linux-12xx/{commit}/{path}",
+     "api_url": "https://api.github.com/repos/feeRnt/ps4-linux-12xx/contents/{path}?ref={commit}",
+     "license": "None recorded. MediaTek vendor Wi-Fi driver firmware; keep it local and do not redistribute it."
+    }
+   },
+   "files": [
+    {
+     "path": "mediatek/mt7668pr2h.bin",
+     "bytes": 170990,
+     "sha256": "465ed634c61b46b34bb21240736f33d3d347fefec7cbfbd1cb6e63334aec4cc9",
+     "source": "linux-firmware"
+    },
+    {
+     "path": "EEPROM_MT7668.bin",
+     "bytes": 1024,
+     "sha256": "d3ecac0fde5b66fab282cd97f43c04d77bf4fd6abdbd9c35c5d3d40e2f1f035a",
+     "source": "ps4-linux-5.4"
+    },
+    {
+     "path": "EEPROM_MT7668_e1.bin",
+     "bytes": 1024,
+     "sha256": "a042c6ceb77ae4a0c367e5e5522cbf21f767936b8799a781096e1e72684d957c",
+     "source": "ps4-linux-5.4"
+    },
+    {
+     "path": "mt7668_patch_e1_hdr.bin",
+     "bytes": 152302,
+     "sha256": "519083ebb8318d9cfc8eaaaa7470d1a266c8f32275df3c62e3619d6c07f97389",
+     "source": "ps4-linux-5.4"
+    },
+    {
+     "path": "mt7668_patch_e2_hdr.bin",
+     "bytes": 178782,
+     "sha256": "05a619651517ee481ccfa3ed2cd11bd33f497967802233e6f81085036e0ec9d5",
+     "source": "ps4-linux-5.4"
+    },
+    {
+     "path": "TxPwrLimit_MT76x8.dat",
+     "bytes": 19064,
+     "sha256": "49fa3e52b26fe49b837187c91765550e32cd6540ea2e09343274245d6630062a",
+     "source": "ps4-linux-5.4"
+    },
+    {
+     "path": "wifi.cfg",
+     "bytes": 889,
+     "sha256": "828d7d18607c78513a71719f919340a7c91ee8ef68080ad7270a65dd661abbbd",
+     "source": "ps4-linux-5.4"
+    },
+    {
+     "path": "WIFI_RAM_CODE2_SDIO_MT7668.bin",
+     "bytes": 51816,
+     "sha256": "35faff6a613fefcbe33a6f6d8df885be76c546f9e78ba8ab93056a816ad87254",
+     "source": "ps4-linux-5.4"
+    },
+    {
+     "path": "WIFI_RAM_CODE2_USB_MT7668.bin",
+     "bytes": 55880,
+     "sha256": "b6c6b63f021168a327a0600119a416c4f5f5198820a3267b54a1259c19da0baf",
+     "source": "ps4-linux-5.4"
+    },
+    {
+     "path": "WIFI_RAM_CODE_MT7668.bin",
+     "bytes": 463080,
+     "sha256": "977724f3eef0e6f27567a6684bf616b884b82fe948bde0a436ea546a1f9c83ee",
+     "source": "ps4-linux-5.4"
+    }
+   ],
+   "redistribution": "mediatek/mt7668pr2h.bin: linux-firmware LICENCE.mediatek (redistributable); others: none recorded — keep local",
+   "hash_source": "meerzulee/omarchy-psx@625cb1ba manifests/ps4-firmware.json",
+   "redistributable": false
+  },
+  "marvell-88w8897": {
+   "source": "linux-firmware (upstream path mrvl/...)",
+   "licence": "LICENCE.Marvell: binary redistribution permitted for use with Marvell silicon only",
+   "redistributable": false,
+   "redistribution_note": "Treated as operator-supplied until the bytes are confirmed identical to a linux-firmware tag (kernel.org was unreachable from the Orbis build host). Two independent community copies agree.",
+   "needed_in": "initramfs (mwifiex/btmrvl SDIO are built into the Orbis kernel and request firmware at probe time, before the root is mounted)",
+   "required_for": [
+    "Wi-Fi/Bluetooth on Marvell 88W8897 (Torus 2) consoles; CUH-1215A per Nick"
+   ],
+   "files": [
+    {
+     "path": "mrvl/sd8897_uapsta.bin",
+     "bytes": 609492,
+     "sha256": "b04fee35702d765ca4d84e321ad4cf814b7c8fb9b2aa6784e9154cb06df0cc4a"
+    }
+   ],
+   "observed_in": [
+    {
+     "source": "X-F1REBALL-X/PS4-Linux v1.0 initramfs.cpio.gz",
+     "sha256": "3f373bd6c469e490eaf4e5cf4d2e8ed77cf7bb91449b6a18da6a6529d479169b"
+    },
+    {
+     "source": "feeRnt/ps4-linux-initramfs@8f3a62c lib/firmware/mrvl/ (2026-01-29)"
+    }
+   ]
+  },
+  "marvell-88w8797": {
+   "source": "linux-firmware (upstream path mrvl/...)",
+   "licence": "LICENCE.Marvell: binary redistribution permitted for use with Marvell silicon only",
+   "redistributable": false,
+   "redistribution_note": "Treated as operator-supplied until the bytes are confirmed identical to a linux-firmware tag (kernel.org was unreachable from the Orbis build host). Two independent community copies agree.",
+   "needed_in": "initramfs (mwifiex/btmrvl SDIO are built into the Orbis kernel and request firmware at probe time, before the root is mounted)",
+   "required_for": [
+    "Wi-Fi/Bluetooth on Marvell 88W8797 (Torus 1) consoles"
+   ],
+   "files": [
+    {
+     "path": "mrvl/sd8797_uapsta.bin",
+     "bytes": 452764,
+     "sha256": "c5b84ce8f70072f9f11173f448d574655ff2506595cb8dc113f6d8110272ad66"
+    }
+   ],
+   "observed_in": [
+    {
+     "source": "X-F1REBALL-X/PS4-Linux v1.0 initramfs.cpio.gz",
+     "sha256": "3f373bd6c469e490eaf4e5cf4d2e8ed77cf7bb91449b6a18da6a6529d479169b"
+    },
+    {
+     "source": "feeRnt/ps4-linux-initramfs@8f3a62c lib/firmware/mrvl/ (2026-01-29)"
+    }
+   ]
   }
+ }
 }

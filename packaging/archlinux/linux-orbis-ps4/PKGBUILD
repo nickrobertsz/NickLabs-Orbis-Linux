@@ -13,8 +13,21 @@ makedepends=('git' 'clang' 'lld' 'llvm' 'bc' 'flex' 'bison' 'libelf' 'perl' 'pyt
 options=('!strip' '!debug' '!lto')
 source=()
 
+# ORBIS_KERNEL_OUT=<dir>: package an existing build-kernel.sh output (bzImage, config,
+# modules-<rel>.tar, build-manifest.json, SHA256SUMS) instead of compiling again, e.g. the
+# released orbis-kernel-aeolia-belize-6.15-build.tar.gz extracted. Its SHA256SUMS and the
+# PS4 loader contract are checked first.
 build() {
-  "${startdir}/../../../kernel/build-kernel.sh" "$_target" --out "$srcdir/out" --src "$srcdir/src"
+  local R; R="${startdir}/../../.."
+  if [ -n "${ORBIS_KERNEL_OUT:-}" ]; then
+    echo "using prebuilt Orbis kernel from $ORBIS_KERNEL_OUT"
+    rm -rf "$srcdir/out" && cp -a "$ORBIS_KERNEL_OUT" "$srcdir/out"
+    rm -rf "$srcdir/out/modroot"
+    ( cd "$srcdir/out" && sha256sum -c SHA256SUMS )
+  else
+    "$R/kernel/build-kernel.sh" "$_target" --out "$srcdir/out" --src "$srcdir/src"
+  fi
+  python -I -c "import sys; sys.path.insert(0, sys.argv[1]); from orbis import bzimage; r = bzimage.inspect(sys.argv[2]); print('loader check:', 'ok' if r.ok else r.errors); sys.exit(0 if r.ok and (r.ikconfig or {}).get('CONFIG_X86_PS4') == 'y' else 1)" "$R/platform" "$srcdir/out/bzImage"
 }
 
 package() {

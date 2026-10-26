@@ -6,7 +6,7 @@ pkgdesc="NickLabs PS4 Orbis Linux platform layer (PC · GAMING · AI mode engine
 arch=('x86_64')
 url="https://github.com/nicklabs/ps4-orbis-linux"
 license=('MIT')
-depends=('python>=3.11' 'systemd' 'util-linux' 'dosfstools' 'binutils' 'vulkan-icd-loader' 'libglvnd')
+depends=('python>=3.11' 'systemd' 'util-linux' 'dosfstools' 'binutils' 'vulkan-icd-loader' 'libglvnd' 'nftables' 'git')
 makedepends=('vulkan-headers' 'gcc' 'make')
 optdepends=('zenity: desktop mode-switch confirmation dialogs'
             'xorg-xinit: GAMING session' 'openbox: GAMING session window manager')
@@ -42,13 +42,22 @@ package() {
   install -d "$pkgdir/usr/share/orbis/initramfs-ps4-src"
   cp -a "$srcdir/initramfs-ps4/." "$pkgdir/usr/share/orbis/initramfs-ps4-src/"
   rm -rf "$pkgdir/usr/share/orbis/initramfs-ps4-src/.git"
+  echo "${_initramfs_commit}" > "$pkgdir/usr/share/orbis/initramfs-ps4-src/.orbis-commit"
+  for f in "$R"/packaging/initramfs/patches/*.patch; do install -Dm644 "$f" "$pkgdir/usr/share/orbis/initramfs-patches/$(basename "$f")"; done
+  install -Dm755 "$R/packaging/initramfs/tests/root-selection.sh" "$pkgdir/usr/lib/orbis/initramfs-root-selection-check"
+  install -Dm755 "$R/packaging/initramfs/overlay/bin/orbis-stage0-report" "$pkgdir/usr/share/orbis/initramfs-overlay/bin/orbis-stage0-report"
+  install -Dm755 "$R/packaging/initramfs/overlay/hooks/pre_newroot_mount/5-orbis-stage0" "$pkgdir/usr/share/orbis/initramfs-overlay/hooks/pre_newroot_mount/5-orbis-stage0"
   install -Dm644 "$R/manifests/qualified-snapshots.txt" "$pkgdir/usr/share/orbis/qualified-snapshots"
   install -Dm755 "$R/packaging/scripts/orbis-update.sh" "$pkgdir/usr/bin/orbis-update"
+  install -Dm755 "$R/tests/hardware/qualify.sh" "$pkgdir/usr/lib/orbis/qualify.sh"
+  ln -s /usr/lib/orbis/qualify.sh "$pkgdir/usr/bin/orbis-qualify"
   install -Dm755 "$R/platform/generators/orbis-mode-generator" "$pkgdir/usr/lib/systemd/system-generators/orbis-mode-generator"
   for u in "$R"/platform/systemd/*; do install -Dm644 "$u" "$pkgdir/usr/lib/systemd/system/$(basename "$u")"; done
   install -Dm644 "$R/platform/misc/sleep-90-orbis.conf" "$pkgdir/usr/lib/systemd/sleep.conf.d/90-orbis.conf"
   install -Dm644 "$R/platform/misc/logind-90-orbis.conf" "$pkgdir/usr/lib/systemd/logind.conf.d/90-orbis.conf"
   install -Dm644 "$R/platform/misc/sysctl-90-orbis.conf" "$pkgdir/usr/lib/sysctl.d/90-orbis.conf"
+  install -Dm644 "$R/platform/misc/nftables-orbis-lan-only.nft" "$pkgdir/usr/lib/orbis/nftables/lan-only.nft"
+  install -Dm644 "$R/platform/misc/timesyncd-90-orbis.conf" "$pkgdir/usr/lib/systemd/timesyncd.conf.d/90-orbis.conf"
   install -Dm644 "$R/platform/misc/sysusers-orbis.conf" "$pkgdir/usr/lib/sysusers.d/orbis.conf"
   install -Dm644 "$R/platform/misc/tmpfiles-orbis.conf" "$pkgdir/usr/lib/tmpfiles.d/orbis.conf"
   install -Dm644 "$R/platform/xorg/10-orbis-ps4-1080p60.conf" "$pkgdir/usr/share/X11/xorg.conf.d/10-orbis-ps4-1080p60.conf"
@@ -59,6 +68,9 @@ package() {
   install -Dm644 "$R/manifests/capability-matrix.json" "$pkgdir/usr/share/orbis/capability-matrix.json"
   install -Dm644 "$R/manifests/gaming-compat.json" "$pkgdir/usr/share/orbis/gaming-compat.json"
   install -Dm644 "$R/manifests/firmware.json" "$pkgdir/usr/share/orbis/firmware.json"
+  install -Dm644 "$R/manifests/initramfs-profiles.json" "$pkgdir/usr/share/orbis/initramfs-profiles.json"
+  install -Dm644 "$R/manifests/sources.json" "$pkgdir/usr/share/orbis/sources.json"
+  install -Dm644 "$R/manifests/references.json" "$pkgdir/usr/share/orbis/references.json"
   for f in "$R"/ui/*; do install -Dm644 "$f" "$pkgdir/usr/share/orbis/ui/$(basename "$f")"; done
   for f in "$R"/modes/pc/*.desktop; do install -Dm644 "$f" "$pkgdir/usr/share/applications/$(basename "$f")"; done
   for f in "$R"/docs/*.md; do install -Dm644 "$f" "$pkgdir/usr/share/doc/orbis/$(basename "$f")"; done

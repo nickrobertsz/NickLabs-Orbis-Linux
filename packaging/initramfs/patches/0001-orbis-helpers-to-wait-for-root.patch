@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: NickLabs Orbis <orbis@nicklabs.invalid>
+Date: Mon, 26 Oct 2026 07:58:50 -0700
+Subject: [PATCH 1/2] orbis: helpers to wait for root=
+
+---
+ functions.sh | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/functions.sh b/functions.sh
+index 7d0f11a..e2418bf 100644
+--- a/functions.sh
++++ b/functions.sh
+@@ -650,6 +650,26 @@ ps4_fsck() {
+ 	esac
+ }
+ 
++# NickLabs Orbis: wait for the device named by root= (LABEL=, UUID= or a /dev path).
++orbis_root_dev() {
++	case "${root}" in
++		LABEL=*|UUID=*) findfs "${root}" 2>/dev/null ;;
++		*) [ -b "${root}" ] && echo "${root}" ;;
++	esac
++}
++orbis_wait_root() {
++	local n=0
++	while [ "${n}" -lt "${1:-30}" ]; do
++		orbis_root_dev >/dev/null && return 0
++		sleep 1
++		n=$((n + 1))
++	done
++	eerror "root=${root} did not appear within ${1:-30}s."
++	return 1
++}
++orbis_cmdline() {
++	grep -qw -- "$1" /proc/cmdline
++}
+ ps4_find_install() {
+ 	if mountpoint -q /newroot && ! umount /newroot; then
+ 		eerror "/newroot is busy, can not search again."

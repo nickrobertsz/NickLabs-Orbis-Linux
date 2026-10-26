@@ -5,3 +5,5 @@ xterm
 gamemode
 lib32-gamemode
 wine
+# Offline-capable frontend for LAN-only consoles (Steam needs the internet to sign in)
+kodi
