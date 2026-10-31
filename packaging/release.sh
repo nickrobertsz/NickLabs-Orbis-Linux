@@ -96,6 +96,21 @@ elif [ ! -f "$kout/bzImage" ]; then
   echo "no kernel: pass --kernel-tar orbis-kernel-aeolia-belize-6.15-build.tar.gz or --build-kernel" >&2; exit 2
 fi
 python3 -I -c "import sys; sys.path.insert(0, 'platform'); from orbis import bzimage; r = bzimage.inspect(sys.argv[1]); print('loader check:', 'ok' if r.ok else r.errors); sys.exit(0 if r.ok else 1)" "$kout/bzImage"
+# Preflight the exact PS4 kernel capability before expensive package builds.
+# Wine -> ntsync-autoload must not pull in generic Arch linux.
+python3 - "$kout" <<'PY_ORBIS_NTSYNC'
+import json, pathlib, re, sys, tarfile
+out = pathlib.Path(sys.argv[1]); cfg = (out / 'config').read_text()
+m = re.search(r'^CONFIG_NTSYNC=(y|m)$', cfg, re.M)
+if not m:
+    sys.exit('PS4 kernel lacks CONFIG_NTSYNC. Rebuild with updated Orbis fragment CONFIG_NTSYNC=m; old kernel archive is incompatible with full gaming support.')
+if m.group(1) == 'm':
+    rel = json.loads((out / 'build-manifest.json').read_text())['kernel_release']
+    with tarfile.open(out / f'modules-{rel}.tar') as tf:
+        if not any(re.search(r'(^|/)ntsync\.ko(\.(gz|xz|zst))?$', n) for n in tf.getnames()):
+            sys.exit('CONFIG_NTSYNC=m but compiled ntsync.ko is absent')
+print('==> PS4 NTSYNC kernel capability verified:', m.group(1))
+PY_ORBIS_NTSYNC
 
 step 4 "initramfs: $profile (+ firmware-free)"
 python3 packaging/initramfs/build_initramfs.py --src out/src/initramfs-ps4 --profile "$profile" \
@@ -122,12 +137,47 @@ step 6 "package signing key"
 if [ "$sign" = 1 ]; then packaging/scripts/orbis-repo-key.sh; else echo "unsigned local repository (pass --sign to sign it)"; fi
 
 step 7 "build container + Orbis packages (Mesa, llama.cpp, platform, kernel package)"
-$SUDO "$engine" build --build-arg SNAPSHOT="$SNAPSHOT" -t "orbis-build:$VERSION" -f packaging/Containerfile packaging
-run_c() { $SUDO "$engine" run --rm --privileged -v "$R":/src:z -w /src "orbis-build:$VERSION" "$@"; }
-run_c env ORBIS_KERNEL_OUT="/src/$kout" packaging/build-packages.sh
+core_ctr="orbis-build:$VERSION-fullbase"
+$SUDO "$engine" build --build-arg SNAPSHOT="$SNAPSHOT" -t "$core_ctr" -f packaging/Containerfile packaging
+container_id="$($SUDO "$engine" image inspect --format '{{.Id}}' "$core_ctr")"
+[[ -n "$container_id" ]] || { echo 'Missing pinned build container identity' >&2; exit 6; }
+run_c() { $SUDO "$engine" run --rm --privileged -e ORBIS_DISPOSABLE_BUILD=1 \
+  -e ORBIS_CONTAINER_ID="$container_id" -e ORBIS_SNAPSHOT="$SNAPSHOT" \
+  -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
+  -v "$R":/src:z -w /src "$core_ctr" "$@"; }
+# The container is disposable.  On an incremental build, packages left in
+# out/repo already have detached Orbis signatures from an earlier pass.
+# Import and trust our *existing* public key before makepkg's local Mesa handoff
+# calls pacman -U, and before repo-add opens signed cached packages.  Keep this
+# preflight outside build-packages.sh: that file is an input to every package
+# cache fingerprint, so changing it would recompile all previously built code.
+run_c env ORBIS_KERNEL_OUT="/src/$kout" bash -c '
+  set -Eeuo pipefail
+  if [[ -s out/keys/orbis-repo-key.asc && -s out/keys/orbis-repo-key.fingerprint ]]; then
+    fpr="$(cat out/keys/orbis-repo-key.fingerprint)"
+    echo "==> Initializing package-builder trust for local Orbis key $fpr"
+    pacman-key --init
+    pacman-key --populate archlinux
+    pacman-key --add out/keys/orbis-repo-key.asc
+    pacman-key --lsign-key "$fpr"
+    pacman-key --finger "$fpr" >/dev/null
+    echo "==> Orbis package signing key trusted inside disposable build container"
+  fi
+  exec packaging/build-packages.sh
+'
+# Refuse a stale cached PS4 kernel package before rootfs assembly.
+ps4_pkgver="$(sed -n 's/^pkgver=//p' packaging/archlinux/linux-orbis-ps4/PKGBUILD)"
+ps4_pkgrel="$(sed -n 's/^pkgrel=//p' packaging/archlinux/linux-orbis-ps4/PKGBUILD)"
+ps4_pkg="out/repo/linux-orbis-ps4-${ps4_pkgver}-${ps4_pkgrel}-x86_64.pkg.tar.zst"
+[ -s "$ps4_pkg" ] || { echo "missing rebuilt PS4 kernel package $ps4_pkg" >&2; exit 4; }
+run_c bash -c 'bsdtar -xOf "$1" .PKGINFO | grep -Fxq "provides = NTSYNC-MODULE"' _ "/src/$ps4_pkg" || {
+  echo 'PS4 kernel package lacks NTSYNC-MODULE; refusing stale cache' >&2; exit 4;
+}
 
 step 8 "root filesystem (Arch snapshot $SNAPSHOT + local [orbis] repo)"
-args=(--snapshot "$SNAPSHOT" --repo out/repo --out out/rootfs --keys out/keys)
+args=(--snapshot "$SNAPSHOT" --repo out/repo --out out/rootfs --keys out/keys
+      --kernel-out "$kout" --ps4-initramfs "out/initramfs/initramfs-$profile.cpio.gz"
+      --expected-profile "$profile")
 [ -n "$model" ] && args+=(--model "$model")
 [ "$internet" = 1 ] && args+=(--internet-allowed)
 if [ -n "$sshkey" ]; then mkdir -p out/keys && cp "$sshkey" out/keys/console-authorized-key.pub && args+=(--authorized-key out/keys/console-authorized-key.pub); fi
@@ -142,28 +192,36 @@ step 10 "USB image, checksums, manifest, SBOM, source"
 img="$rel/orbis-$VERSION-$profile.img"
 run_c python3 packaging/image/make_usb_image.py image --rootfs-dir out/rootfs/dir --kernel "$kout/bzImage" \
   --initramfs "out/initramfs/initramfs-$profile.cpio.gz" --size "$size" -o "$img" > "$img.json"
+run_c python3 packaging/scripts/verify_final_image.py --image "$img" \
+  --kernel "$kout/bzImage" --kernel-manifest "$kout/build-manifest.json" \
+  --initramfs "out/initramfs/initramfs-$profile.cpio.gz" --profile "$profile" \
+  > "$rel/final-image-validation.json"
 xz -T0 -6 -kf "$img"
 python3 packaging/sbom.py > "$rel/sbom.spdx.json"
 python3 packaging/dist.py --version "$VERSION"
 cp out/NICKLABS-PS4-ORBIS-LINUX-SOURCE.tar.gz "$rel/"
 $SUDO chown -R "$(id -u):$(id -g)" out/release out/repo out/initramfs 2>/dev/null || true
-python3 - "$rel" "$profile" "$VERSION" <<'PY'
+python3 - "$rel" "$profile" "$VERSION" "$SNAPSHOT" "$TARGET" "$container_id" <<'PY'
 import hashlib, json, sys
 from pathlib import Path
-rel, profile, version = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
-files = sorted(p for p in rel.iterdir() if p.is_file() and not p.name.startswith("SHA256SUMS") and p.suffix != ".img")
+rel = Path(sys.argv[1])
+profile, version, snapshot, target, container_id = sys.argv[2:]
 def h(p):
     d = hashlib.sha256()
     with open(p, "rb") as f:
         for c in iter(lambda: f.read(1 << 20), b""): d.update(c)
     return d.hexdigest()
-(rel / "SHA256SUMS").write_text("".join(f"{h(p)}  {p.name}\n" for p in files))
 img = json.loads((rel / f"orbis-{version}-{profile}.img.json").read_text())
 (rel / "release-manifest.json").write_text(json.dumps({
-    "version": version, "profile": profile, "redistributable": img["boot"]["redistributable"],
+    "schema": "orbis-core-release/2", "version": version, "profile": profile,
+    "target": target, "snapshot": snapshot, "build_container_id": container_id,
+    "redistributable": img["boot"]["redistributable"],
     "kernel": img["boot"]["kernel"], "initramfs": img["boot"]["initramfs"],
     "hardware_qualified": False,
     "note": "PS4-UNTESTED until console receipts exist (tests/hardware/qualify.sh)"}, indent=1) + "\n")
+files = sorted(p for p in rel.iterdir() if p.is_file() and not p.name.startswith("SHA256SUMS"))
+(rel / "SHA256SUMS").write_text("".join(f"{h(p)}  {p.name}\n" for p in files))
 PY
+( cd "$rel" && sha256sum -c --status SHA256SUMS )
 echo; echo "release ready in $rel:"; ls -la "$rel"
 echo "Flash with: python3 packaging/image/make_usb_image.py write --image $img --device /dev/sdX (dry run first)"

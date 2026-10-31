@@ -2,6 +2,15 @@
 # Called by 95-orbis-kernel-sync.hook with changed vmlinuz paths on stdin.
 set -u
 rc=0
+if [ -f /.orbis-image-assembly ]; then
+    # During pacstrap there is no PS4 boot partition yet. Deferral is only
+    # valid while the release builder's transient marker exists; its final
+    # image gate verifies and installs the same PS4 kernel/initramfs pair.
+    while read -r path; do
+        [ -n "$path" ] && echo ":: orbis: deferring $path until PS4 image assembly"
+    done
+    exit 0
+fi
 while read -r path; do
     kdir="/${path%/vmlinuz}"
     rel="$(basename "$kdir")"

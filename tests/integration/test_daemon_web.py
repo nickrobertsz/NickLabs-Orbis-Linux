@@ -17,14 +17,26 @@ import demo_stack  # noqa: E402
 class DaemonWebTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.fx, cls.d, cls.w, cls.sd = demo_stack.start(0, token="t0ken")
+        from unittest.mock import patch
+        cls._nobara_group_fixture = patch(
+            "orbis.daemon._in_group", return_value=True
+        )
+        cls._nobara_group_fixture.start()
+        try:
+            cls.fx, cls.d, cls.w, cls.sd = demo_stack.start(0, token="t0ken")
+        except Exception:
+            cls._nobara_group_fixture.stop()
+            raise
         cls.base = f"http://127.0.0.1:{cls.w.server_address[1]}"
 
     @classmethod
     def tearDownClass(cls):
         cls.w.shutdown()
         cls.d.shutdown()
+        cls.w.server_close()
+        cls.d.server_close()
         cls.fx.__exit__(None, None, None)
+        cls._nobara_group_fixture.stop()
 
     def opener(self):
         return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))

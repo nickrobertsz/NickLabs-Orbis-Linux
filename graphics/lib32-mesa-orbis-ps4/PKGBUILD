@@ -10,7 +10,8 @@ url="https://www.mesa3d.org"
 license=('MIT' 'custom')
 depends=("mesa-orbis-ps4=${pkgver}" 'lib32-libdrm' 'lib32-libxshmfence' 'lib32-libelf' 'lib32-libglvnd'
          'lib32-wayland' 'lib32-zstd' 'lib32-expat' 'lib32-llvm-libs' 'lib32-libx11' 'lib32-libxext'
-         'lib32-libxfixes' 'lib32-libxxf86vm' 'lib32-libxcb' 'lib32-vulkan-icd-loader' 'lib32-lm_sensors'
+         'lib32-libxfixes' 'lib32-libxxf86vm' 'lib32-libxcb' 'lib32-libxrandr' 'lib32-libxrender'
+         'lib32-vulkan-icd-loader' 'lib32-lm_sensors'
          'lib32-systemd' 'lib32-spirv-tools')
 makedepends=('meson' 'ninja' 'python-mako' 'python-packaging' 'python-yaml' 'glslang' 'lib32-llvm'
              'xorgproto' 'wayland-protocols' 'byacc' 'flex')
@@ -45,7 +46,7 @@ build() {
   export CC="gcc -m32" CXX="g++ -m32" PKG_CONFIG=i686-pc-linux-gnu-pkg-config
   export CFLAGS="${CFLAGS/-march=x86-64-v[234]/-march=x86-64} -mtune=btver2"
   export CXXFLAGS="${CXXFLAGS/-march=x86-64-v[234]/-march=x86-64} -mtune=btver2"
-  arch-meson "mesa-${_mesaver}" build --native-file "$srcdir/crossfile.ini" --libdir=/usr/lib32 \
+  arch-meson --auto-features=auto "mesa-${_mesaver}" build --native-file "$srcdir/crossfile.ini" --libdir=/usr/lib32 \
     -D b_ndebug=true -D platforms=x11,wayland -D gallium-drivers=radeonsi,llvmpipe \
     -D vulkan-drivers=amd -D vulkan-layers= -D video-codecs= -D gallium-va=disabled \
     -D gallium-rusticl=false -D llvm=enabled -D shared-llvm=enabled \

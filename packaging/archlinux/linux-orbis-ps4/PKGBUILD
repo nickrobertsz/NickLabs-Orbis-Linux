@@ -4,14 +4,33 @@
 pkgname=linux-orbis-ps4
 _target=aeolia-belize-6.15
 pkgver=6.15.4.crashnt4.7
-pkgrel=1
+pkgrel=2
 pkgdesc="PS4 (Aeolia/Belize) Linux kernel for NickLabs Orbis: feeRnt crashnt-4.7 + Orbis patches, firmware-free"
 arch=('x86_64')
 url="https://github.com/feeRnt/ps4-linux-12xx"
 license=('GPL-2.0-only')
 makedepends=('git' 'clang' 'lld' 'llvm' 'bc' 'flex' 'bison' 'libelf' 'perl' 'python' 'pahole' 'cpio')
 options=('!strip' '!debug' '!lto')
+provides=('NTSYNC-MODULE')
 source=()
+# ntsync-autoload needs NTSYNC-MODULE: advertise it only when PS4 hardware
+# receives an actually built-in or loadable ntsync driver, never a fake provider.
+verify_ntsync_payload() {
+  local out="$1" rel
+  [ -f "$out/config" ] || { echo "missing PS4 kernel config" >&2; return 1; }
+  if grep -qx 'CONFIG_NTSYNC=y' "$out/config"; then
+    echo 'PS4 NTSYNC built in'
+  elif grep -qx 'CONFIG_NTSYNC=m' "$out/config"; then
+    rel="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["kernel_release"])' "$out/build-manifest.json")"
+    [ -f "$out/modules-$rel.tar" ] || { echo "missing modules-$rel.tar" >&2; return 1; }
+    tar -tf "$out/modules-$rel.tar" | awk '/(^|\/)ntsync\.ko(\.(gz|xz|zst))?$/ {found=1} END {exit !found}' || {
+      echo "ntsync module missing from PS4 kernel modules-$rel.tar" >&2; return 1;
+    }
+  else
+    echo 'PS4 kernel lacks NTSYNC; rebuild kernel with CONFIG_NTSYNC=m' >&2; return 1
+  fi
+}
+
 
 # ORBIS_KERNEL_OUT=<dir>: package an existing build-kernel.sh output (bzImage, config,
 # modules-<rel>.tar, build-manifest.json, SHA256SUMS) instead of compiling again, e.g. the
@@ -27,11 +46,13 @@ build() {
   else
     "$R/kernel/build-kernel.sh" "$_target" --out "$srcdir/out" --src "$srcdir/src"
   fi
+  verify_ntsync_payload "$srcdir/out"
   python -I -c "import sys; sys.path.insert(0, sys.argv[1]); from orbis import bzimage; r = bzimage.inspect(sys.argv[2]); print('loader check:', 'ok' if r.ok else r.errors); sys.exit(0 if r.ok and (r.ikconfig or {}).get('CONFIG_X86_PS4') == 'y' else 1)" "$R/platform" "$srcdir/out/bzImage"
 }
 
 package() {
   local rel
+  verify_ntsync_payload "$srcdir/out"
   rel="$(python -c "import json; print(json.load(open('$srcdir/out/build-manifest.json'))['kernel_release'])")"
   rm -rf "$srcdir/mods" && mkdir -p "$srcdir/mods" "$pkgdir/usr/lib/modules"
   tar -C "$srcdir/mods" -xf "$srcdir/out/modules-$rel.tar"
